@@ -1,7 +1,3 @@
-<?php
-// Simple server-side logic
-$message = "Hello from PHP!";
-?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,9 +18,7 @@ $message = "Hello from PHP!";
             </ul>
         </nav>
     </div>
-    <h1><?php echo $message; ?></h1>
-
-  <button onclick="fetchMessage()">Click to fetch client-side message</button>
-  <p id="output"></p>
+    <?php
+    ?>
 </body>
 </html>

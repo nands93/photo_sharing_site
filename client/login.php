@@ -18,5 +18,8 @@
             </ul>
         </nav>
     </div>
+    <?php
+    
+    ?>
 </body>
 </html>
