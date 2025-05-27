@@ -37,12 +37,12 @@ services:
     image: mariadb:latest
     container_name: mariadb
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: camagru
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - ./server/mariadb/data:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     networks:
       - camagru
     ports:
@@ -50,11 +50,12 @@ services:
     restart: always
 
   phpmyadmin:
-    image: phpmyadmin
+    image: phpmyadmin:latest
     container_name: phpmyadmin
     environment:
       PMA_HOST: mariadb
       PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
       - "8081:80"
     networks:
