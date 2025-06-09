@@ -39,7 +39,7 @@
         $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_SPECIAL_CHARS);
         $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
         if (empty($username) || empty($username) || empty($password)) {
-            echo "Username or password are empty.";
+            echo "Please, not empty fields.";
         }
         else {
             $hash = password_hash($password, PASSWORD_ARGON2ID);
