@@ -1,3 +1,7 @@
+<?php
+    session_start();
+    require_once 'database.php';
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,9 +21,16 @@
                 <li><a href="signup.php">Cadastro</a></li>
             </ul>
         </nav>
+        <form action="login.php" method="post">
+            <label>username</label>
+            <input type="text" name="username"><br>
+            <label>password</label>
+            <input type="password" name="password"><br>
+            <input type="submit" value="Log in"><br>
+        </form>
+        <?php
+
+        ?>
     </div>
-    <?php
-    
-    ?>
 </body>
 </html>
