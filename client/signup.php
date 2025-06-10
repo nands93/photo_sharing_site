@@ -1,13 +1,37 @@
 <?php
     session_start();
     require_once 'database.php';
+    
+    $message = '';
+    $messageType = '';
+    
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
+        $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+        $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
+        
+        if (empty($username) || empty($email) || empty($password)) {
+            $message = "Por favor, preencha todos os campos.";
+            $messageType = 'error';
+        } else {
+            $hash = password_hash($password, PASSWORD_ARGON2ID);
+            $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hash')";
+            if (mysqli_query($conn, $sql)) {
+                $message = "Usuário registrado com sucesso!";
+                $messageType = 'success';
+            } else {
+                $message = "Erro: " . mysqli_error($conn);
+                $messageType = 'error';
+            }
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Camagru</title>
+    <title>Camagru - Cadastro</title>
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -21,34 +45,39 @@
                 <li><a href="signup.php">Cadastro</a></li>
             </ul>
         </nav>
-        <form action="<?php htmlspecialchars(($_SERVER['PHP_SELF'])); ?>" method="post">
-            <label>username</label>
-            <input type="text" name="username"><br>
-            <label>email</label>
-            <input type="text" name="email"><br>
-            <label>password</label>
-            <input type="password" name="password"><br>
-            <input type="submit" value="REGISTER"><br>
-        </form>
+        
+        <div class="form-container">
+            <?php if ($message): ?>
+                <div class="message <?php echo $messageType; ?>">
+                    <?php echo $message; ?>
+                </div>
+            <?php endif; ?>
+            
+            <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="signup-form">
+                <div class="form-group">
+                    <label for="username">Nome de usuário</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn-register">
+                    <span>Criar Conta</span>
+                </button>
+            </form>
+            
+            <div class="form-footer">
+                <p>Já tem uma conta? <a href="login.php">Faça login</a></p>
+            </div>
+        </div>
     </div>
 </body>
 </html>
-<?php
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-        $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_SPECIAL_CHARS);
-        $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
-        if (empty($username) || empty($username) || empty($password)) {
-            echo "Please, not empty fields.";
-        }
-        else {
-            $hash = password_hash($password, PASSWORD_ARGON2ID);
-            $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hash')";
-           if (mysqli_query($conn, $sql)) {
-                echo "User registered successfully.";
-            } else {
-                echo "Error: " . mysqli_error($conn);
-            }
-        }
-    }
-?>
