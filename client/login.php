@@ -1,37 +1,75 @@
 <?php
     session_start();
-    require_once 'database.php';
+    require_once 'backend.php';
 
     $message = '';
     $messageType = '';
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-        $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
-
-        if (empty($username) || empty($password)) {
-            $message = "Por favor, preencha todos os campos.";
+        // Verificar CSRF token
+        $csrf_token = $_POST['csrf_token'] ?? '';
+        if (!verify_csrf_token($csrf_token)) {
+            $message = "Token de segurança inválido. Tente novamente.";
             $messageType = 'error';
-        } else {
-            $sql = "SELECT * FROM users WHERE username='$username'";
-            $result = mysqli_query($conn, $sql);
-            if (mysqli_num_rows($result) > 0) {
-                $user = mysqli_fetch_assoc($result);
-                if (password_verify($password, $user['password'])) {
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['username'] = $user['username'];
-                    header("Location: index.php");
-                    exit();
+        }
+        // Verificar rate limiting
+        elseif (!check_rate_limit('login', 5, 300)) {
+            $message = "Muitas tentativas de login. Tente novamente em 5 minutos.";
+            $messageType = 'error';
+        }
+        else {
+            $username = trim($_POST['username'] ?? '');
+            $password = $_POST['password'] ?? '';
+
+            if (empty($username) || empty($password)) {
+                $message = "Por favor, preencha todos os campos.";
+                $messageType = 'error';
+            } elseif (!validate_username($username)) {
+                $message = "Nome de usuário inválido.";
+                $messageType = 'error';
+            } else {
+                // Usar prepared statement para prevenir SQL injection
+                $stmt = mysqli_prepare($conn, "SELECT id, username, password FROM users WHERE username = ? LIMIT 1");
+                if ($stmt) {
+                    mysqli_stmt_bind_param($stmt, "s", $username);
+                    mysqli_stmt_execute($stmt);
+                    $result = mysqli_stmt_get_result($stmt);
+                    
+                    if ($user = mysqli_fetch_assoc($result)) {
+                        if (password_verify($password, $user['password'])) {
+                            // Login bem-sucedido
+                            $_SESSION['user_id'] = $user['id'];
+                            $_SESSION['username'] = $user['username'];
+                            
+                            // Regenerar session ID para prevenir session fixation
+                            session_regenerate_id(true);
+                            
+                            // Reset rate limiting
+                            unset($_SESSION['login_attempts']);
+                            unset($_SESSION['login_last_attempt']);
+                            
+                            header("Location: index.php");
+                            exit();
+                        } else {
+                            $message = "Nome de usuário ou senha incorretos.";
+                            $messageType = 'error';
+                        }
+                    } else {
+                        $message = "Nome de usuário ou senha incorretos.";
+                        $messageType = 'error';
+                    }
+                    mysqli_stmt_close($stmt);
                 } else {
-                    $message = "Senha incorreta.";
+                    error_log("Prepare failed: " . mysqli_error($conn));
+                    $message = "Erro interno. Tente novamente mais tarde.";
                     $messageType = 'error';
                 }
-            } else {
-                $message = "Usuário não encontrado.";
-                $messageType = 'error';
             }
         }
     }
+
+    // Gerar CSRF token
+    $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>
 <html>
@@ -61,9 +99,11 @@
             <?php endif; ?>
             
             <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="signup-form">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                
                 <div class="form-group">
                     <label for="username">Nome de usuário</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
                 </div>
                 
                 <div class="form-group">

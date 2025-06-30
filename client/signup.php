@@ -1,30 +1,74 @@
 <?php
     session_start();
-    require_once 'database.php';
+    require_once 'backend.php';
     
     $message = '';
     $messageType = '';
     
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_SPECIAL_CHARS);
-        $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
-        $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_SPECIAL_CHARS);
-        
-        if (empty($username) || empty($email) || empty($password)) {
-            $message = "Por favor, preencha todos os campos.";
+        // Verificar CSRF token
+        $csrf_token = $_POST['csrf_token'] ?? '';
+        if (!verify_csrf_token($csrf_token)) {
+            $message = "Token de segurança inválido. Tente novamente.";
             $messageType = 'error';
-        } else {
-            $hash = password_hash($password, PASSWORD_ARGON2ID);
-            $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hash')";
-            if (mysqli_query($conn, $sql)) {
-                $message = "Usuário registrado com sucesso!";
-                $messageType = 'success';
-            } else {
-                $message = "Erro: " . mysqli_error($conn);
+        }
+        // Verificar rate limiting
+        elseif (!check_rate_limit('signup', 3, 600)) {
+            $message = "Muitas tentativas de cadastro. Tente novamente em 10 minutos.";
+            $messageType = 'error';
+        }
+        else {
+            $username = trim($_POST['username'] ?? '');
+            $email = trim($_POST['email'] ?? '');
+            $password = $_POST['password'] ?? '';
+            
+            if (empty($username) || empty($email) || empty($password)) {
+                $message = "Por favor, preencha todos os campos.";
                 $messageType = 'error';
+            } elseif (!validate_username($username)) {
+                $message = "Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore.";
+                $messageType = 'error';
+            } elseif (!validate_email($email)) {
+                $message = "E-mail inválido.";
+                $messageType = 'error';
+            } elseif (!validate_password($password)) {
+                $message = "Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial.";
+                $messageType = 'error';
+            } elseif (user_exists($conn, $username, $email)) {
+                $message = "Nome de usuário ou e-mail já cadastrado.";
+                $messageType = 'error';
+            } else {
+                // Usar prepared statement para prevenir SQL injection
+                $hash = password_hash($password, PASSWORD_ARGON2ID);
+                $stmt = mysqli_prepare($conn, "INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+                
+                if ($stmt) {
+                    mysqli_stmt_bind_param($stmt, "sss", $username, $email, $hash);
+                    
+                    if (mysqli_stmt_execute($stmt)) {
+                        $message = "Usuário registrado com sucesso!";
+                        $messageType = 'success';
+                        
+                        // Reset rate limiting após sucesso
+                        unset($_SESSION['signup_attempts']);
+                        unset($_SESSION['signup_last_attempt']);
+                    } else {
+                        error_log("Insert failed: " . mysqli_stmt_error($stmt));
+                        $message = "Erro ao registrar usuário. Tente novamente mais tarde.";
+                        $messageType = 'error';
+                    }
+                    mysqli_stmt_close($stmt);
+                } else {
+                    error_log("Prepare failed: " . mysqli_error($conn));
+                    $message = "Erro interno. Tente novamente mais tarde.";
+                    $messageType = 'error';
+                }
             }
         }
     }
+
+    // Gerar CSRF token
+    $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>
 <html>
@@ -54,19 +98,23 @@
             <?php endif; ?>
             
             <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="signup-form">
+                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                
                 <div class="form-group">
                     <label for="username">Nome de usuário</label>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
+                    <small>3-30 caracteres, apenas letras, números e underscore</small>
                 </div>
                 
                 <div class="form-group">
                     <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" required maxlength="100">
                 </div>
                 
                 <div class="form-group">
                     <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" required minlength="8" title="Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial">
+                    <small>Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo</small>
                 </div>
                 
                 <button type="submit" class="btn-register">
