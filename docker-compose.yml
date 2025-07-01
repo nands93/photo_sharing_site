@@ -6,6 +6,7 @@ services:
     container_name: php
     volumes:
       - ./client:/var/www/client
+      - ./.env:/var/www/client/.env:ro
     networks:
       - camagru
     depends_on:

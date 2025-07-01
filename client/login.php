@@ -6,13 +6,11 @@
     $messageType = '';
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Verificar CSRF token
         $csrf_token = $_POST['csrf_token'] ?? '';
         if (!verify_csrf_token($csrf_token)) {
             $message = "Token de segurança inválido. Tente novamente.";
             $messageType = 'error';
         }
-        // Verificar rate limiting
         elseif (!check_rate_limit('login', 5, 300)) {
             $message = "Muitas tentativas de login. Tente novamente em 5 minutos.";
             $messageType = 'error';
@@ -28,7 +26,6 @@
                 $message = "Nome de usuário inválido.";
                 $messageType = 'error';
             } else {
-                // Usar prepared statement para prevenir SQL injection
                 $stmt = mysqli_prepare($conn, "SELECT id, username, password FROM users WHERE username = ? LIMIT 1");
                 if ($stmt) {
                     mysqli_stmt_bind_param($stmt, "s", $username);
@@ -37,14 +34,11 @@
                     
                     if ($user = mysqli_fetch_assoc($result)) {
                         if (password_verify($password, $user['password'])) {
-                            // Login bem-sucedido
                             $_SESSION['user_id'] = $user['id'];
                             $_SESSION['username'] = $user['username'];
                             
-                            // Regenerar session ID para prevenir session fixation
                             session_regenerate_id(true);
                             
-                            // Reset rate limiting
                             unset($_SESSION['login_attempts']);
                             unset($_SESSION['login_last_attempt']);
                             
@@ -67,8 +61,6 @@
             }
         }
     }
-
-    // Gerar CSRF token
     $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>

@@ -1,10 +1,19 @@
 <?php
-    $db_server = "mariadb";
-    $db_user = getenv('MYSQL_USER') ?: "root";
-    $db_password = getenv('MYSQL_PASSWORD') ?: "root";
-    $db_name = getenv('MYSQL_DATABASE') ?: "camagru";
-    $db_port = "3306";
+    $env = parse_ini_file('.env');
     
+    if ($env === false) {
+        die("Erro ao carregar o arquivo de configuração .env");
+    }
+
+    $db_server = $env["DB_SERVER"];
+    $db_user = $env["MYSQL_USER"];
+    $db_password = $env["MYSQL_PASSWORD"];
+    $db_name = $env["MYSQL_DATABASE"];
+    $db_port = $env["DB_PORT"];
+    if (!$db_server || !$db_user || !$db_password || !$db_name || !$db_port) {
+        die("Erro ao carregar as configurações do banco de dados.");
+    }
+
     try {
         $conn = mysqli_connect($db_server, $db_user, $db_password, $db_name, $db_port);
         

@@ -6,13 +6,11 @@
     $messageType = '';
     
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Verificar CSRF token
         $csrf_token = $_POST['csrf_token'] ?? '';
         if (!verify_csrf_token($csrf_token)) {
             $message = "Token de segurança inválido. Tente novamente.";
             $messageType = 'error';
         }
-        // Verificar rate limiting
         elseif (!check_rate_limit('signup', 3, 600)) {
             $message = "Muitas tentativas de cadastro. Tente novamente em 10 minutos.";
             $messageType = 'error';
@@ -38,7 +36,6 @@
                 $message = "Nome de usuário ou e-mail já cadastrado.";
                 $messageType = 'error';
             } else {
-                // Usar prepared statement para prevenir SQL injection
                 $hash = password_hash($password, PASSWORD_ARGON2ID);
                 $stmt = mysqli_prepare($conn, "INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
                 
@@ -46,10 +43,9 @@
                     mysqli_stmt_bind_param($stmt, "sss", $username, $email, $hash);
                     
                     if (mysqli_stmt_execute($stmt)) {
-                        $message = "Usuário registrado com sucesso!";
+                        $message = "Usuário registrado com sucesso! Você será redirecionado para a página de login em breve.";
                         $messageType = 'success';
                         
-                        // Reset rate limiting após sucesso
                         unset($_SESSION['signup_attempts']);
                         unset($_SESSION['signup_last_attempt']);
                     } else {
@@ -66,8 +62,6 @@
             }
         }
     }
-
-    // Gerar CSRF token
     $csrf_token = generate_csrf_token();
 ?>
 <!DOCTYPE html>
@@ -127,5 +121,12 @@
             </div>
         </div>
     </div>
+    <?php if ($messageType == 'success'): ?>
+    <script>
+        setTimeout(function() {
+            window.location.href = 'login.php';
+        }, 3000); // 3000 ms = 3 segundos
+    </script>
+    <?php endif; ?>
 </body>
 </html>

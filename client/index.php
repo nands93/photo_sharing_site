@@ -4,12 +4,10 @@
     
     $is_logged_in = isset($_SESSION['user_id']) && isset($_SESSION['username']);
     
-    // Gerar CSRF token se usuário logado
     if ($is_logged_in) {
         $csrf_token = generate_csrf_token();
     }
     
-    // Verificar mensagem de logout
     $message = '';
     if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
         $message = 'Logout realizado com sucesso!';
@@ -56,7 +54,5 @@
             <?php endif; ?>
         </div>
     </div>
-    <?php
-    ?>
 </body>
 </html>

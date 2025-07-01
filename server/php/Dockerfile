@@ -15,6 +15,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install pdo_mysql mysqli mbstring exif pcntl bcmath gd
 
 COPY client/ .
+COPY .env .env
 
 RUN chown -R www-data:www-data /var/www/client
 
