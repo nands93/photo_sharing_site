@@ -303,3 +303,9 @@ h1:after {
     font-size: 16px;
     line-height: 1.6;
 }
+
+.message.warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}

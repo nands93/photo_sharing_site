@@ -1,15 +1,12 @@
 <?php
-    $env = parse_ini_file('.env');
-    
-    if ($env === false) {
-        die("Erro ao carregar o arquivo de configuração .env");
-    }
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->safeLoad();
 
-    $db_server = $env["DB_SERVER"];
-    $db_user = $env["MYSQL_USER"];
-    $db_password = $env["MYSQL_PASSWORD"];
-    $db_name = $env["MYSQL_DATABASE"];
-    $db_port = $env["DB_PORT"];
+    $db_server = $_ENV["DB_SERVER"];
+    $db_user = $_ENV["MYSQL_USER"];
+    $db_password = $_ENV["MYSQL_PASSWORD"];
+    $db_name = $_ENV["MYSQL_DATABASE"];
+    $db_port = $_ENV["DB_PORT"];
     if (!$db_server || !$db_user || !$db_password || !$db_name || !$db_port) {
         die("Erro ao carregar as configurações do banco de dados.");
     }
@@ -100,5 +97,25 @@
         $_SESSION[$time_key] = time();
         
         return $_SESSION[$key] <= $max_attempts;
+    }
+
+    function authenticate_user($conn, $username, $password) {
+        $stmt = mysqli_prepare($conn, "SELECT id, username, email, password, email_verified FROM users WHERE username = ? OR email = ?");
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "ss", $username, $username);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            $user = mysqli_fetch_assoc($result);
+            mysqli_stmt_close($stmt);
+            
+            if ($user && password_verify($password, $user['password'])) {
+                // Verificar se o e-mail foi confirmado
+                if (!$user['email_verified']) {
+                    return ['error' => 'email_not_verified'];
+                }
+                return $user;
+            }
+        }
+        return false;
     }
 ?>

@@ -33,17 +33,22 @@
                     $result = mysqli_stmt_get_result($stmt);
                     
                     if ($user = mysqli_fetch_assoc($result)) {
-                        if (password_verify($password, $user['password'])) {
-                            $_SESSION['user_id'] = $user['id'];
-                            $_SESSION['username'] = $user['username'];
+                        if ($user && password_verify($password, $user['password'])) {
+                            if (!$user['email_verified']) {
+                                $message = "Por favor, confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.";
+                                $messageType = 'error';
+                            } else {
+                                $_SESSION['user_id'] = $user['id'];
+                                $_SESSION['username'] = $user['username'];
                             
-                            session_regenerate_id(true);
-                            
-                            unset($_SESSION['login_attempts']);
-                            unset($_SESSION['login_last_attempt']);
-                            
-                            header("Location: index.php");
-                            exit();
+                                session_regenerate_id(true);
+                                
+                                unset($_SESSION['login_attempts']);
+                                unset($_SESSION['login_last_attempt']);
+                                
+                                header("Location: index.php");
+                                exit();
+                            }
                         } else {
                             $message = "Nome de usuário ou senha incorretos.";
                             $messageType = 'error';

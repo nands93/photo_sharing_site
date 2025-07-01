@@ -1,6 +1,7 @@
 <?php
     session_start();
     require_once 'backend.php';
+    require_once 'email.php';
     
     $message = '';
     $messageType = '';
@@ -37,14 +38,20 @@
                 $messageType = 'error';
             } else {
                 $hash = password_hash($password, PASSWORD_ARGON2ID);
-                $stmt = mysqli_prepare($conn, "INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
+                $confirmation_token = generate_confirmation_token();
+                $stmt = mysqli_prepare($conn, "INSERT INTO users (username, email, password, confirmation_token, email_verified) VALUES (?, ?, ?, ?, 0)");
                 
                 if ($stmt) {
-                    mysqli_stmt_bind_param($stmt, "sss", $username, $email, $hash);
+                    mysqli_stmt_bind_param($stmt, "ssss", $username, $email, $hash, $confirmation_token);
                     
                     if (mysqli_stmt_execute($stmt)) {
-                        $message = "Usuário registrado com sucesso! Você será redirecionado para a página de login em breve.";
-                        $messageType = 'success';
+                        if (send_confirmation_email($email, $username, $confirmation_token)) {
+                            $message = "Usuário registrado com sucesso! Verifique seu e-mail para confirmar o cadastro antes de fazer login.";
+                            $messageType = 'success';
+                        } else {
+                            $message = "Usuário registrado, mas houve erro ao enviar e-mail de confirmação. Entre em contato com o suporte.";
+                            $messageType = 'warning';
+                        }
                         
                         unset($_SESSION['signup_attempts']);
                         unset($_SESSION['signup_last_attempt']);

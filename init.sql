@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(30) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    confirmation_token VARCHAR(64) NULL,
+    email_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
@@ -16,7 +18,8 @@ CREATE TABLE IF NOT EXISTS users (
     -- Índices para performance
     INDEX idx_username (username),
     INDEX idx_email (email),
-    INDEX idx_active (is_active)
+    INDEX idx_active (is_active),
+    INDEX idx_confirmation_token (confirmation_token)
 );
 
 -- Criar tabela para logs de segurança (opcional)
