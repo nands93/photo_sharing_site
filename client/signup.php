@@ -125,7 +125,7 @@
     <script>
         setTimeout(function() {
             window.location.href = 'login.php';
-        }, 3000); // 3000 ms = 3 segundos
+        }, 3000);
     </script>
     <?php endif; ?>
 </body>
