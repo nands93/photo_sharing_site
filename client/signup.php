@@ -70,26 +70,12 @@
         }
     }
     $csrf_token = generate_csrf_token();
+
+    $page_title = 'Cadastro';
+    $page_name = 'Cadastro';
+
+    include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Camagru - Cadastro</title>
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-    <div class="header">
-        <nav>
-            <img src="images/logo.png" alt="Camagru Logo" class="logo" width="100"/>
-            <h1>Cadastro</h1>
-            <ul>
-                <li><a href="index.php">Início</a></li>
-                <li><a href="login.php">Login</a></li>
-                <li><a href="signup.php">Cadastro</a></li>
-            </ul>
-        </nav>
         
         <div class="form-container">
             <?php if ($message): ?>
@@ -127,7 +113,7 @@
                 <p>Já tem uma conta? <a href="login.php">Faça login</a></p>
             </div>
         </div>
-    </div>
+    <?php include 'includes/footer.php'; ?>
     <?php if ($messageType == 'success'): ?>
     <script>
         setTimeout(function() {
@@ -135,5 +121,3 @@
         }, 3000);
     </script>
     <?php endif; ?>
-</body>
-</html>

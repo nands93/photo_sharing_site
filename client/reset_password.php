@@ -1,41 +1,22 @@
-<?php
-require_once 'backend.php';
-
-$message = '';
-$messageType = '';
-
-if (isset($_GET['token'])) {
-    $token = $_GET['token'];
-    
-    $stmt = mysqli_prepare($conn, "UPDATE users SET email_verified = 1, confirmation_token = NULL WHERE confirmation_token = ? AND email_verified = 0");
-    
-    if ($stmt) {
-        mysqli_stmt_bind_param($stmt, "s", $token);
-        
-        if (mysqli_stmt_execute($stmt)) {
-            if (mysqli_stmt_affected_rows($stmt) > 0) {
-                $message = "E-mail confirmado com sucesso! Você já pode fazer login.";
-                $messageType = 'success';
-            } else {
-                $message = "Token inválido ou conta já verificada.";
-                $messageType = 'error';
-            }
-        } else {
-            $message = "Erro ao confirmar e-mail.";
-            $messageType = 'error';
-        }
-        mysqli_stmt_close($stmt);
-    }
-} else {
-    $message = "Token não fornecido.";
-    $messageType = 'error';
-}
-
-$page_title = 'Camagru - Confirmação de E-mail';
-$page_name = 'Confirmação de E-mail';
-
-include 'includes/header.php';
-?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Camagru - Confirmação de E-mail</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="header">
+        <nav>
+            <img src="images/logo.png" alt="Camagru Logo" class="logo" width="100"/>
+            <h1>Confirmação de E-mail</h1>
+            <ul>
+                <li><a href="index.php">Início</a></li>
+                <li><a href="login.php">Login</a></li>
+                <li><a href="signup.php">Cadastro</a></li>
+            </ul>
+        </nav>
         
         <div class="form-container">
             <?php if ($message): ?>
@@ -60,7 +41,7 @@ include 'includes/header.php';
                 </p>
             </div>
         </div>
-    <?php include 'includes/footer.php'; ?>
+        <?php include 'includes/footer.php'; ?>
     
     <?php if ($messageType == 'success'): ?>
     <script>

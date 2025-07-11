@@ -67,26 +67,12 @@
         }
     }
     $csrf_token = generate_csrf_token();
+
+    $page_title = 'Login';
+    $page_name = 'Login';
+
+    include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Camagru - Login</title>
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-    <div class="header">
-        <nav>
-            <img src="images/logo.png" alt="Camagru Logo" class="logo" width="100"/>
-            <h1>Login</h1>
-            <ul>
-                <li><a href="index.php">Início</a></li>
-                <li><a href="login.php">Login</a></li>
-                <li><a href="signup.php">Cadastro</a></li>
-            </ul>
-        </nav>
         
         <div class="form-container">
             <?php if ($message): ?>
@@ -117,6 +103,4 @@
                 <p>Não tem uma conta? <a href="signup.php">Cadastre-se</a></p>
             </div>
         </div>
-    </div>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>

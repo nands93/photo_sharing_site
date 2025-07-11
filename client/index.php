@@ -12,32 +12,12 @@
     if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
         $message = 'Logout realizado com sucesso!';
     }
+    $page_title = 'Camagru';
+    $page_name = 'Camagru';
+
+    include 'includes/header.php';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Camagru</title>
-    <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-    <div class="header">
-        <nav>
-            <img src="images/logo.png" alt="Camagru Logo" class="logo" width="100"/>
-            <h1>Camagru</h1>
-            <ul>
-                <li><a href="index.php">Início</a></li>
-                <?php if ($is_logged_in): ?>
-                    <li><a href="profile.php">Perfil</a></li>
-                    <li><a href="logout.php?token=<?php echo $csrf_token; ?>" onclick="return confirm('Tem certeza que deseja sair?')">Sair (<?php echo sanitize_input($_SESSION['username']); ?>)</a></li>
-                <?php else: ?>
-                    <li><a href="login.php">Login</a></li>
-                    <li><a href="signup.php">Cadastro</a></li>
-                <?php endif; ?>
-            </ul>
-        </nav>
-        
+    <div class="content-wrapper">
         <div class="content">
             <?php if ($message): ?>
                 <div class="message success">
@@ -54,5 +34,4 @@
             <?php endif; ?>
         </div>
     </div>
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>
