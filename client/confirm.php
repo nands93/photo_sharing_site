@@ -31,8 +31,8 @@ if (isset($_GET['token'])) {
     $messageType = 'error';
 }
 
-$page_title = 'Camagru - Confirmação de E-mail';
-$page_name = 'Confirmação de E-mail';
+$page_title = 'Email Confirmation';
+$page_name = 'Email Confirmation';
 
 include 'includes/header.php';
 ?>

@@ -71,8 +71,8 @@
     }
     $csrf_token = generate_csrf_token();
 
-    $page_title = 'Cadastro';
-    $page_name = 'Cadastro';
+    $page_title = 'Sign up';
+    $page_name = 'Sign up';
 
     include 'includes/header.php';
 ?>
