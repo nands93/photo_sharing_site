@@ -27,7 +27,7 @@
                 mysqli_stmt_bind_param($stmt, "sss", $reset_password_token, $expires, $email);
                 mysqli_stmt_execute($stmt);
                 reset_password_email($email, $reset_password_token);
-                $message = "If the email exists, a password reset link has been sent.";
+                $message = "If the account exists, a password reset link has been sent to your email.";
                 $messageType = 'success';
             }
         } else {
