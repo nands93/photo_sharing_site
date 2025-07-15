@@ -38,7 +38,7 @@ if (isset($_GET['token'])) {
                 mysqli_stmt_bind_param($stmt, "ss", $hashed_password, $email);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
-                $message = "Your password has been reset. You can now <a href='login.php'>log in</a>.";
+                $message = "Your password has been reset. You can now <a href='login.php' class='btn-link'>log in</a>.";
                 $messageType = 'success';
             }
         }
