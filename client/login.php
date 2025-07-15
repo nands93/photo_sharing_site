@@ -41,6 +41,7 @@
                                 $_SESSION['user_id'] = $user['id'];
                                 $_SESSION['username'] = $user['username'];
 
+                                date_default_timezone_set('America/Sao_Paulo');
                                 $now = date('Y-m-d H:i:s');
                                 $update_stmt = mysqli_prepare($conn, "UPDATE users SET last_login=? WHERE id=?");
                                 mysqli_stmt_bind_param($update_stmt, "si", $now, $user['id']);

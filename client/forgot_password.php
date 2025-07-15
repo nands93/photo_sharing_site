@@ -21,6 +21,7 @@
                 $messageType = 'error';
             } else {
                 $reset_password_token = generate_token();
+                date_default_timezone_set('America/Sao_Paulo');
                 $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
                 $stmt = mysqli_prepare($conn, "UPDATE users SET reset_password_token=?, reset_password_expires=? WHERE email=?");
                 mysqli_stmt_bind_param($stmt, "sss", $reset_password_token, $expires, $email);
