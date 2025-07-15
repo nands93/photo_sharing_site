@@ -33,7 +33,7 @@ if (isset($_GET['token'])) {
                 $message = "Password must be at least 8 characters, with uppercase, lowercase, number, and special character.";
                 $messageType = 'error';
             } else {
-                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+                $hashed_password = password_hash($new_password, PASSWORD_ARGON2ID);
                 $stmt = mysqli_prepare($conn, "UPDATE users SET password=?, reset_password_token=NULL, reset_password_expires=NULL WHERE email=?");
                 mysqli_stmt_bind_param($stmt, "ss", $hashed_password, $email);
                 mysqli_stmt_execute($stmt);
