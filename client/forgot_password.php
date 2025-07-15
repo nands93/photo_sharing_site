@@ -20,19 +20,31 @@
                 $message = "Invalid email.";
                 $messageType = 'error';
             } else {
-                $reset_password_token = generate_token();
-                date_default_timezone_set('America/Sao_Paulo');
-                $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
-                $stmt = mysqli_prepare($conn, "UPDATE users SET reset_password_token=?, reset_password_expires=? WHERE email=?");
-                mysqli_stmt_bind_param($stmt, "sss", $reset_password_token, $expires, $email);
+                $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email=? LIMIT 1");
+                mysqli_stmt_bind_param($stmt, "s", $email);
                 mysqli_stmt_execute($stmt);
-                reset_password_email($email, $reset_password_token);
+                mysqli_stmt_store_result($stmt);
+
+                if (mysqli_stmt_num_rows($stmt) > 0) {
+                    mysqli_stmt_close($stmt);
+                    $reset_password_token = generate_token();
+                    date_default_timezone_set('America/Sao_Paulo');
+                    $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
+                    $stmt = mysqli_prepare($conn, "UPDATE users SET reset_password_token=?, reset_password_expires=? WHERE email=?");
+                    mysqli_stmt_bind_param($stmt, "sss", $reset_password_token, $expires, $email);
+                    mysqli_stmt_execute($stmt);
+                    mysqli_stmt_close($stmt);
+                    reset_password_email($email, $reset_password_token);
+                } else {
+                    mysqli_stmt_close($stmt);
+                }
                 $message = "If the account exists, a password reset link has been sent to your email.";
                 $messageType = 'success';
             }
-        } else {
+            } else {
             $message = "Invalid CSRF token.";
             $messageType = 'error';
+            mysqli_stmt_close($stmt);
         }
     }
 
