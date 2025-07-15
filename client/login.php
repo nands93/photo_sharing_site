@@ -26,7 +26,7 @@
                 $message = "Nome de usuário inválido.";
                 $messageType = 'error';
             } else {
-                $stmt = mysqli_prepare($conn, "SELECT id, username, password FROM users WHERE username = ? LIMIT 1");
+                $stmt = mysqli_prepare($conn, "SELECT id, username, password, email_verified FROM users WHERE username = ? LIMIT 1");
                 if ($stmt) {
                     mysqli_stmt_bind_param($stmt, "s", $username);
                     mysqli_stmt_execute($stmt);
@@ -85,22 +85,24 @@
                 <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                 
                 <div class="form-group">
-                    <label for="username">Nome de usuário</label>
+                    <label for="username">Username</label>
                     <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
                 </div>
                 
                 <div class="form-group">
-                    <label for="password">Senha</label>
+                    <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
                 
                 <button type="submit" class="btn-register">
-                    <span>Entrar</span>
+                    <span>Login</span>
                 </button>
             </form>
             
             <div class="form-footer">
-                <p>Não tem uma conta? <a href="signup.php">Cadastre-se</a></p>
+                <p>New to Camagru? <a href="signup.php">Sign up now!</a></p>
+                <br>
+                <a href="forgot_password.php">Forgot Password?</a>
             </div>
         </div>
 <?php include 'includes/footer.php'; ?>

@@ -38,7 +38,7 @@
                 $messageType = 'error';
             } else {
                 $hash = password_hash($password, PASSWORD_ARGON2ID);
-                $confirmation_token = generate_confirmation_token();
+                $confirmation_token = generate_token();
                 $stmt = mysqli_prepare($conn, "INSERT INTO users (username, email, password, confirmation_token, email_verified) VALUES (?, ?, ?, ?, 0)");
                 
                 if ($stmt) {
@@ -63,7 +63,7 @@
                     mysqli_stmt_close($stmt);
                 } else {
                     error_log("Prepare failed: " . mysqli_error($conn));
-                    $message = "Erro interno. Tente novamente mais tarde.";
+                    $message = "Internal error. Please try again later.";
                     $messageType = 'error';
                 }
             }
@@ -110,7 +110,7 @@
             </form>
             
             <div class="form-footer">
-                <p>Já tem uma conta? <a href="login.php">Faça login</a></p>
+                <p>Already have an account? <a href="login.php">Login</a></p>
             </div>
         </div>
     <?php include 'includes/footer.php'; ?>

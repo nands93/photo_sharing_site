@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
+    reset_password_token VARCHAR(64) NULL,
+    reset_password_expires DATETIME NULL,
+    last_login TIMESTAMP NULL,
     
     -- Índices para performance
     INDEX idx_username (username),

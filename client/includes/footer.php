@@ -2,7 +2,7 @@
         <nav>
             <div class="footer-brand">
                 <h3>📸 Camagru</h3>
-                <p>ESSA BOSTA DE FOOTER NÃO FICA</p>
+                <p>42 Rio</p>
             </div>
             
             <ul>
