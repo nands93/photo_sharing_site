@@ -14,14 +14,14 @@ if (isset($_GET['token'])) {
         
         if (mysqli_stmt_execute($stmt)) {
             if (mysqli_stmt_affected_rows($stmt) > 0) {
-                $message = "E-mail confirmado com sucesso! Você já pode fazer login.";
+                $message = "Email confirmed successfully. You can now log in.";
                 $messageType = 'success';
             } else {
-                $message = "Token inválido ou conta já verificada.";
+                $message = "Invalid confirmation token or email already verified.";
                 $messageType = 'error';
             }
         } else {
-            $message = "Erro ao confirmar e-mail.";
+            $message = "Error confirming email. Please try again later.";
             $messageType = 'error';
         }
         mysqli_stmt_close($stmt);
