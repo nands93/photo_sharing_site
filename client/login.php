@@ -20,10 +20,10 @@
             $password = $_POST['password'] ?? '';
 
             if (empty($username) || empty($password)) {
-                $message = "Por favor, preencha todos os campos.";
+                $message = "Please fill in all fields.";
                 $messageType = 'error';
             } elseif (!validate_username($username)) {
-                $message = "Nome de usuário inválido.";
+                $message = "Ivalid username. Use 3-30 characters, letters, numbers, and underscores only.";
                 $messageType = 'error';
             } else {
                 $stmt = mysqli_prepare($conn, "SELECT id, username, password, email_verified FROM users WHERE username = ? LIMIT 1");
@@ -35,7 +35,7 @@
                     if ($user = mysqli_fetch_assoc($result)) {
                         if ($user && password_verify($password, $user['password'])) {
                             if (!$user['email_verified']) {
-                                $message = "Por favor, confirme seu e-mail antes de fazer login. Verifique sua caixa de entrada.";
+                                $message = "Please, verify your email address before logging in.";
                                 $messageType = 'error';
                             } else {
                                 $_SESSION['user_id'] = $user['id'];
@@ -57,17 +57,17 @@
                                 exit();
                             }
                         } else {
-                            $message = "Nome de usuário ou senha incorretos.";
+                            $message = "Username or password is incorrect.";
                             $messageType = 'error';
                         }
                     } else {
-                        $message = "Nome de usuário ou senha incorretos.";
+                        $message = "Username or password is incorrect.";
                         $messageType = 'error';
                     }
                     mysqli_stmt_close($stmt);
                 } else {
                     error_log("Prepare failed: " . mysqli_error($conn));
-                    $message = "Erro interno. Tente novamente mais tarde.";
+                    $message = "Internal server error. Please try again later.";
                     $messageType = 'error';
                 }
             }

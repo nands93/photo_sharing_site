@@ -27,7 +27,7 @@ if (isset($_GET['token'])) {
         mysqli_stmt_close($stmt);
     }
 } else {
-    $message = "Token não fornecido.";
+    $message = "Confirmation token not provided.";
     $messageType = 'error';
 }
 
@@ -46,16 +46,16 @@ include 'includes/header.php';
             
             <div class="form-group">
                 <a href="login.php" class="btn-register" style="text-decoration: none; display: inline-block; text-align: center;">
-                    <span><?php echo $messageType === 'success' ? 'Fazer Login' : 'Tentar Novamente'; ?></span>
+                    <span><?php echo $messageType === 'success' ? 'Login' : 'Try again'; ?></span>
                 </a>
             </div>
             
             <div class="form-footer">
                 <p>
                     <?php if ($messageType === 'success'): ?>
-                        Sua conta foi ativada com sucesso!
+                        Account verified successfully! You can now log in.
                     <?php else: ?>
-                        Precisa de ajuda? <a href="signup.php">Registrar novamente</a>
+                        Need help? <a href="signup.php">Contact support</a>.
                     <?php endif; ?>
                 </p>
             </div>
