@@ -38,7 +38,7 @@ if (isset($_GET['token'])) {
                 mysqli_stmt_bind_param($stmt, "ss", $hashed_password, $email);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
-                $message = "Your password has been reset. You can now <a href='login.php' class='btn-link'>log in</a>.";
+                $message = "Your password has been reset. You can now <a href='login.php' class='link-camagru'>log in</a>.";
                 $messageType = 'success';
             }
         }
@@ -53,30 +53,39 @@ if (isset($_GET['token'])) {
 
 include 'includes/header.php';
 ?>
-<div class="form-container">
-    <?php if ($messageType === 'error' && $message): ?>
-        <div class="message error">
-            <?php echo $message; ?>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow custom-card">
+                <div class="card-body">
+                    <h2 class="mb-4 text-center">Reset Password</h2>
+                    <?php if ($message): ?>
+                        <div class="alert alert-<?php echo ($messageType === 'error') ? 'danger' : $messageType; ?> text-center" role="alert">
+                            <?php echo $message; ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (isset($email) && $email && $messageType !== 'success'): ?>
+                    <form action="" method="post">
+                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New password</label>
+                            <input type="password" id="new_password" name="new_password" required minlength="8" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Repeat new password</label>
+                            <input type="password" id="confirm_password" name="confirm_password" required minlength="8" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-camagru w-100">Reset Password</button>
+                    </form>
+                    <?php endif; ?>
+                    <?php if ($messageType === 'success'): ?>
+                        <div class="text-center mt-3">
+                            <a href="login.php" class="btn btn-camagru">Login</a>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
-    <?php endif; ?>
-    <?php if (isset($email) && $email && $messageType !== 'success'): ?>
-    <form action="" method="post">
-        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-        <div class="form-group">
-            <label for="new_password">New password</label>
-            <input type="password" id="new_password" name="new_password" required minlength="8">
-        </div>
-        <div class="form-group">
-            <label for="confirm_password">Repeat new password</label>
-            <input type="password" id="confirm_password" name="confirm_password" required minlength="8">
-        </div>
-        <button type="submit" class="btn-register">Reset Password</button>
-    </form>
-    <?php endif; ?>
-    <?php if ($messageType === 'success' && $message): ?>
-        <div class="message success">
-            <?php echo $message; ?>
-        </div>
-    <?php endif; ?>
+    </div>
 </div>
 <?php include 'includes/footer.php'; ?>
