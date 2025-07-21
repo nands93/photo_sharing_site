@@ -88,7 +88,7 @@
                     <div class="card-body">
                         <h2 class="mb-4 text-center">Login</h2>
                         <?php if ($message): ?>
-                            <div class="alert alert-<?php echo $messageType; ?> text-center">
+                            <div class="alert alert-<?php echo ($messageType === 'error') ? 'danger' : $messageType; ?> text-center" role="alert">
                                 <?php echo $message; ?>
                             </div>
                         <?php endif; ?>
