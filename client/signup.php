@@ -91,7 +91,7 @@
                         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
                             <div class="mb-3">
-                                <label for="username" class="form-label">Nome de usuário</label>
+                                <label for="username" class="form-label">Username</label>
                                 <input
                                     type="text"
                                     id="username"
@@ -102,19 +102,20 @@
                                     class="form-control"
                                     title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
                                 <div class="invalid-feedback">
-                                    Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore.
+                                    3 characters minimum, only letters, numbers, and underscore
                                 </div>
-                                <small class="form-text text-muted">3-30 caracteres, apenas letras, números e underscore</small>
+                                <small class="form-text text-muted">3 characters minimum, only letters, numbers, and underscore
+                                </small>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">E-mail</label>
                                 <input type="email" id="email" name="email" required maxlength="100" class="form-control">
                                 <div class="invalid-feedback">
-                                    Insira um e-mail válido.
+                                    Please enter a valid email address.
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="password" class="form-label">Senha</label>
+                                <label for="password" class="form-label">Password</label>
                                 <input
                                     type="password"
                                     id="password"
@@ -125,15 +126,15 @@
                                     class="form-control"
                                     title="Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial">
                                 <div class="invalid-feedback">
-                                    Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo.
+                                    Password must be at least 8 characters long and include uppercase, lowercase, number, and special character.
                                 </div>
-                                <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo</small>
+                                <small class="form-text text-muted">8 characters minimum, with uppercase, lowercase, number, and special character</small>
                             </div>
-                            <button type="submit" class="btn btn-camagru w-100">Criar Conta</button>
+                            <button type="submit" class="btn btn-camagru w-100">Sign up</button>
                         </form>
                         <div class="text-center mt-3">
-                            <p>Já tem uma conta? 
-                                <a href="login.php" style="color:#bfa76a; font-weight:600; text-decoration:underline;">Login</a>
+                            <p>Already have an account?
+                                <a href="login.php" class="link-camagru">Login</a>
                             </p>
                         </div>
                     </div>

@@ -107,9 +107,9 @@
                         <div class="text-center mt-3">
                         <p class="mb-1">
                             New to Camagru?
-                            <a href="signup.php" style="color:#bfa76a; font-weight:600; text-decoration:underline;">Sign up now!</a>
+                            <a href="signup.php" class="link-camagru">Sign up now!</a>
                         </p>
-                        <a href="forgot_password.php" class="link-secondary">Forgot Password?</a>
+                        <a href="forgot_password.php" class="link-camagru">Forgot Password?</a>
                     </div>
                     </div>
                 </div>

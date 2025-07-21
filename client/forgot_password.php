@@ -50,35 +50,38 @@
 
     include 'includes/header.php';
 ?>
-    
-        <div class="form-container">
-            <?php if ($message): ?>
-            <div class="message <?php echo $messageType; ?>">
-                <?php echo $message; ?>
-            </div>
-        <?php endif; ?>
-        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
-            <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required maxlength="100">
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow custom-card">
+                <div class="card-body">
+                    <h2 class="mb-4 text-center">Reset Password</h2>
+                    <?php if ($message): ?>
+                        <div class="alert alert-<?php echo ($messageType === 'error') ? 'danger' : $messageType; ?> text-center" role="alert">
+                            <?php echo $message; ?>
+                        </div>
+                    <?php endif; ?>
+                    <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+                        <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-mail</label>
+                            <input type="email" id="email" name="email" required maxlength="100" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-camagru w-100">Reset Password</button>
+                    </form>
+                    <div class="form-footer text-center mt-3">
+                        <a href="login.php" class="link-camagru">Back to login page</a>
+                    </div>
                 </div>
-                    <button type="submit" class="btn-register">
-                        <span>Reset Password</span>
-                    </button>
-                    <div class="form-footer">
-                <br>
-                <a href="login.php">Back to login page</a>
             </div>
-                </div>
-                </p>
-            </div>
-        <?php include 'includes/footer.php'; ?>
-    
-    <?php if ($messageType == 'success'): ?>
-    <script>
-        setTimeout(function() {
-            window.location.href = 'login.php';
-        }, 3000);
-    </script>
-    <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php include 'includes/footer.php'; ?>
+<?php if ($messageType == 'success'): ?>
+<script>
+    setTimeout(function() {
+        window.location.href = 'login.php';
+    }, 3000);
+</script>
+<?php endif; ?>

@@ -57,6 +57,16 @@ if (!isset($page_name)) {
             background: #a68d4a;
             color: #222;
         }
+
+        .link-camagru {
+            color: #bfa76a;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .link-camagru:hover {
+            color: #a68d4a;
+        }
     </style>
 </head>
 <body>
@@ -69,11 +79,11 @@ if (!isset($page_name)) {
             <div class="d-flex align-items-center">
                 <ul class="navbar-nav d-flex flex-row">
                     <li class="nav-item me-3">
-                        <a class="nav-link" href="index.php">Início</a>
+                        <a class="nav-link" href="index.php">Camagru</a>
                     </li>
                     <?php if (isset($_SESSION['user_id'])): ?>
                     <li class="nav-item me-3">
-                        <a class="nav-link" href="profile.php">Perfil</a>
+                        <a class="nav-link" href="profile.php">Profile</a>
                     </li>
                     <li class="nav-item">
                             <a class="nav-link text-danger fw-semibold" 
@@ -87,7 +97,7 @@ if (!isset($page_name)) {
                         <a class="nav-link" href="login.php">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="signup.php">Cadastro</a>
+                        <a class="nav-link" href="signup.php">Sign Up</a>
                     </li>
                     <?php endif; ?>
                 </ul>

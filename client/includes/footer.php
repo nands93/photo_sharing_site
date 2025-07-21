@@ -13,18 +13,18 @@
                 <nav class="d-flex justify-content-md-end justify-content-center">
                     <ul class="nav">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="index.php">Início</a>
+                            <a class="nav-link text-dark" href="index.php">Camagru</a>
                         </li>
                         <?php if (!isset($_SESSION['user_id'])): ?>
                             <li class="nav-item">
                                 <a class="nav-link text-dark" href="login.php">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="signup.php">Cadastro</a>
+                                <a class="nav-link text-dark" href="signup.php">Sign Up</a>
                             </li>
                         <?php else: ?>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" href="profile.php">Perfil</a>
+                                <a class="nav-link text-dark" href="profile.php">Profile</a>
                             </li>
                         <?php endif; ?>
                     </ul>
@@ -38,7 +38,7 @@
                 <hr class="my-3">
                 <p class="text-center text-muted mb-0">
                     &copy; <?php echo date('Y'); ?> <strong>Camagru</strong> - 
-                    Desenvolvido por <strong>femarque</strong>
+                    Developed by <strong>femarque</strong> |
                 </p>
             </div>
         </div>
