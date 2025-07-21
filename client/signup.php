@@ -77,47 +77,50 @@
     include 'includes/header.php';
 ?>
         
-        <div class="form-container">
-            <?php if ($message): ?>
-                <div class="message <?php echo $messageType; ?>">
-                    <?php echo $message; ?>
+<div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7 col-lg-6">
+                <div class="card shadow custom-card">
+                    <div class="card-body">
+                        <h2 class="mb-4 text-center">Criar Conta</h2>
+                        <?php if ($message): ?>
+                            <div class="alert alert-<?php echo $messageType; ?> text-center">
+                                <?php echo $message; ?>
+                            </div>
+                        <?php endif; ?>
+                        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Nome de usuário</label>
+                                <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" class="form-control" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
+                                <small class="form-text text-muted">3-30 caracteres, apenas letras, números e underscore</small>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">E-mail</label>
+                                <input type="email" id="email" name="email" required maxlength="100" class="form-control">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Senha</label>
+                                <input type="password" id="password" name="password" required minlength="8" class="form-control" title="Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial">
+                                <small class="form-text text-muted">Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo</small>
+                            </div>
+                            <button type="submit" class="btn btn-camagru w-100">Criar Conta</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>Já tem uma conta? 
+                                <a href="login.php" style="color:#bfa76a; font-weight:600; text-decoration:underline;">Login</a>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
-            
-            <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="signup-form">
-                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                
-                <div class="form-group">
-                    <label for="username">Nome de usuário</label>
-                    <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
-                    <small>3-30 caracteres, apenas letras, números e underscore</small>
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">E-mail</label>
-                    <input type="email" id="email" name="email" required maxlength="100">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input type="password" id="password" name="password" required minlength="8" title="Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial">
-                    <small>Mínimo 8 caracteres com maiúscula, minúscula, número e símbolo</small>
-                </div>
-                
-                <button type="submit" class="btn-register">
-                    <span>Criar Conta</span>
-                </button>
-            </form>
-            
-            <div class="form-footer">
-                <p>Already have an account? <a href="login.php">Login</a></p>
             </div>
         </div>
-    <?php include 'includes/footer.php'; ?>
-    <?php if ($messageType == 'success'): ?>
-    <script>
-        setTimeout(function() {
-            window.location.href = 'login.php';
-        }, 3000);
-    </script>
-    <?php endif; ?>
+    </div>
+<?php include 'includes/footer.php'; ?>
+<?php if ($messageType == 'success'): ?>
+<script>
+    setTimeout(function() {
+        window.location.href = 'login.php';
+    }, 3000);
+</script>
+<?php endif; ?>

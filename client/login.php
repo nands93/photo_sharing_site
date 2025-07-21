@@ -81,35 +81,39 @@
     include 'includes/header.php';
 ?>
         
-        <div class="form-container">
-            <?php if ($message): ?>
-                <div class="message <?php echo $messageType; ?>">
-                    <?php echo $message; ?>
+<div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow custom-card">
+                    <div class="card-body">
+                        <h2 class="mb-4 text-center">Login</h2>
+                        <?php if ($message): ?>
+                            <div class="alert alert-<?php echo $messageType; ?> text-center">
+                                <?php echo $message; ?>
+                            </div>
+                        <?php endif; ?>
+                        <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" class="form-control" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" required class="form-control">
+                            </div>
+                            <button type="submit" class="btn btn-camagru w-100">Login</button>
+                        </form>
+                        <div class="text-center mt-3">
+                        <p class="mb-1">
+                            New to Camagru?
+                            <a href="signup.php" style="color:#bfa76a; font-weight:600; text-decoration:underline;">Sign up now!</a>
+                        </p>
+                        <a href="forgot_password.php" class="link-secondary">Forgot Password?</a>
+                    </div>
+                    </div>
                 </div>
-            <?php endif; ?>
-            
-            <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post" class="signup-form">
-                <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required maxlength="30" pattern="[a-zA-Z0-9_]{3,30}" title="Nome de usuário deve ter 3-30 caracteres, apenas letras, números e underscore">
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <button type="submit" class="btn-register">
-                    <span>Login</span>
-                </button>
-            </form>
-            
-            <div class="form-footer">
-                <p>New to Camagru? <a href="signup.php">Sign up now!</a></p>
-                <br>
-                <a href="forgot_password.php">Forgot Password?</a>
             </div>
         </div>
+    </div>
 <?php include 'includes/footer.php'; ?>
