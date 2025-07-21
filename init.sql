@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
     reset_password_token VARCHAR(64) NULL,
     reset_password_expires DATETIME NULL,
     last_login TIMESTAMP NULL,
+    notify_comments BOOLEAN DEFAULT TRUE,
     
     -- Índices para performance
     INDEX idx_username (username),
