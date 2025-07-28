@@ -29,7 +29,7 @@
                     <div class="card-body">
                         <?php if ($is_logged_in): ?>
                             <h2 class="card-title mb-3">Bem-vindo, <?php echo sanitize_input($_SESSION['username']); ?>!</h2>
-                            <p class="card-text">Você está logado no sistema Camagru.</p>
+                            <a href="photo_edit.php" class="btn btn-camagru w-100">Post a photo!</a>
                         <?php else: ?>
                             <h2 class="card-title mb-3">Bem-vindo ao Camagru</h2>
                             <p class="card-text">Faça login ou cadastre-se para começar a usar o sistema.</p>
