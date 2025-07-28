@@ -38,7 +38,7 @@
                 <hr class="my-3">
                 <p class="text-center text-muted mb-0">
                     &copy; <?php echo date('Y'); ?> <strong>Camagru</strong> - 
-                    Developed by <strong>femarque</strong> |
+                    Developed by <strong>femarque</strong>
                 </p>
             </div>
         </div>
