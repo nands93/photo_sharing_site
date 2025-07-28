@@ -202,7 +202,6 @@ include 'includes/header.php';
                     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
                         <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                         
-                        <!-- Username -->
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
                             <input
@@ -218,7 +217,6 @@ include 'includes/header.php';
                             <small class="form-text text-muted">3 characters minimum, only letters, numbers, and underscore</small>
                         </div>
                         
-                        <!-- Email -->
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <input
@@ -235,7 +233,6 @@ include 'includes/header.php';
                         <hr class="my-4">
                         <h5 class="mb-3">Change Password (Optional)</h5>
                         
-                        <!-- Current Password -->
                         <div class="mb-3">
                             <label for="current_password" class="form-label">Current Password</label>
                             <input
@@ -247,7 +244,6 @@ include 'includes/header.php';
                             <small class="form-text text-muted">Required only if you want to change your password</small>
                         </div>
                         
-                        <!-- New Password -->
                         <div class="mb-3">
                             <label for="new_password" class="form-label">New Password</label>
                             <input
@@ -262,7 +258,6 @@ include 'includes/header.php';
                             <small class="form-text text-muted">8 characters minimum, with uppercase, lowercase, number, and special character</small>
                         </div>
                         
-                        <!-- Confirm New Password -->
                         <div class="mb-4">
                             <label for="confirm_password" class="form-label">Confirm New Password</label>
                             <input
@@ -287,7 +282,6 @@ include 'includes/header.php';
 </div>
 
 <script>
-// Sincronizar campos de senha
 document.getElementById('new_password').addEventListener('input', function() {
     const currentPasswordField = document.getElementById('current_password');
     const confirmPasswordField = document.getElementById('confirm_password');
@@ -302,21 +296,18 @@ document.getElementById('new_password').addEventListener('input', function() {
     }
 });
 
-// Limpar email mascarado quando usuário começar a digitar
 document.getElementById('email').addEventListener('focus', function() {
     if (this.value === '<?php echo htmlspecialchars($masked_email); ?>') {
         this.value = '';
     }
 });
 
-// Restaurar email mascarado se o campo ficar vazio
 document.getElementById('email').addEventListener('blur', function() {
     if (this.value === '') {
         this.value = '<?php echo htmlspecialchars($masked_email); ?>';
     }
 });
 
-// Validação de confirmação de senha
 document.getElementById('confirm_password').addEventListener('input', function() {
     const newPassword = document.getElementById('new_password').value;
     const confirmPassword = this.value;
