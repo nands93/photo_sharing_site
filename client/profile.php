@@ -173,45 +173,5 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
-
-<style>
-/* Estilos customizados para a página de profile */
-.bg-light {
-    background-color: rgba(248, 249, 250, 0.7) !important;
-}
-
-.badge {
-    font-size: 0.7em;
-}
-
-.card-title {
-    border-bottom: 2px solid #bfa76a;
-    padding-bottom: 8px;
-}
-
-.btn-outline-secondary {
-    border-color: #bfa76a;
-    color: #bfa76a;
-}
-
-.btn-outline-secondary:hover {
-    background-color: #bfa76a;
-    border-color: #bfa76a;
-    color: #222;
-}
-
-.form-check-input:checked {
-    background-color: #bfa76a;
-    border-color: #bfa76a;
-}
-
-.form-check-input:focus {
-    border-color: #bfa76a;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgba(191, 167, 106, 0.25);
-}
-</style>
-
 <script src="includes/js/preference_confirm.js"></script>
-
 <?php include 'includes/footer.php'; ?>

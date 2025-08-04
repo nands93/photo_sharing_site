@@ -72,7 +72,5 @@ include 'includes/header.php';
         </div>
     </aside>
 </main>
-
 <script src="includes/js/edit_image.js"></script>
-
 <?php include 'includes/footer.php'; ?>

@@ -44,42 +44,5 @@
         </div>
     </div>
 </footer>
-
-    <style>
-    /* CSS customizado para o footer */
-    .custom-footer {
-        background: rgba(240, 236, 225, 0.95);
-        backdrop-filter: blur(10px);
-        border-top: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    
-    .custom-footer .nav-link {
-        font-weight: 500;
-        color: #222 !important;
-        transition: color 0.3s ease;
-    }
-    
-    .custom-footer .nav-link:hover {
-        color: #b37e03 !important;
-    }
-    
-    /* Garante que o footer fique no final da página */
-    html, body {
-        height: 100%;
-    }
-    
-    body {
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .container-fluid {
-        flex: 1 0 auto;
-    }
-    
-    footer {
-        flex-shrink: 0;
-    }
-</style>
 </body>
 </html>

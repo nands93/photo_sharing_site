@@ -13,61 +13,7 @@ if (!isset($page_name)) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f0ece1 0%, #dad1bf 100%);
-            min-height: 100vh;
-        }
-        .custom-navbar {
-            background: rgba(240, 236, 225, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .custom-card {
-            background: rgba(240, 236, 225, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        .navbar-brand img {
-            border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease;
-        }
-        .navbar-brand img:hover {
-            transform: scale(1.05);
-        }
-        .nav-link {
-            font-weight: 500;
-            color: #222 !important;
-            transition: color 0.3s ease;
-        }
-        .nav-link:hover {
-            color: #b37e03 !important;
-        }
-
-        .btn-camagru {
-            background: #bfa76a;
-            color: #222;
-            border: none;
-            font-weight: 600;
-            transition: background 0.2s;
-        }
-        .btn-camagru:hover, .btn-camagru:focus {
-            background: #a68d4a;
-            color: #222;
-        }
-
-        .link-camagru {
-            color: #bfa76a;
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-        .link-camagru:hover {
-            color: #a68d4a;
-        }
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg custom-navbar sticky-top">
