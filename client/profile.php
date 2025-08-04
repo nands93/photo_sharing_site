@@ -212,16 +212,6 @@ include 'includes/header.php';
 }
 </style>
 
-<script>
-// Confirmar mudanças nas preferências
-document.querySelector('form').addEventListener('submit', function(e) {
-    const checkbox = document.getElementById('notify_comments');
-    if (!checkbox.checked) {
-        if (!confirm('Are you sure you want to disable email notifications? You will not receive emails when someone comments on your photos.')) {
-            e.preventDefault();
-        }
-    }
-});
-</script>
+<script src="includes/js/preference_confirm.js"></script>
 
 <?php include 'includes/footer.php'; ?>

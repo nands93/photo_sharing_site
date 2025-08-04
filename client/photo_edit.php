@@ -73,6 +73,6 @@ include 'includes/header.php';
     </aside>
 </main>
 
-<script src="js/edit_image.js"></script>
+<script src="includes/js/edit_image.js"></script>
 
 <?php include 'includes/footer.php'; ?>

@@ -63,9 +63,5 @@ include 'includes/header.php';
     <?php include 'includes/footer.php'; ?>
     
     <?php if ($messageType == 'success'): ?>
-    <script>
-        setTimeout(function() {
-            window.location.href = 'login.php';
-        }, 3000);
-    </script>
+    <script src="includes/js/timeout.js"></script>
     <?php endif; ?>
