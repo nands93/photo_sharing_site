@@ -28,7 +28,6 @@ if (!$user_data) {
     exit();
 }
 
-// Processar atualização das preferências
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrf_token = $_POST['csrf_token'] ?? '';
     
@@ -39,7 +38,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Too many update attempts. Please try again in 5 minutes.";
         $messageType = 'error';
     } else {
-        // Checkbox - se não estiver marcada, não vem no POST
         $notify_comments = isset($_POST['notify_comments']) ? 1 : 0;
         
         $stmt = mysqli_prepare($conn, "UPDATE users SET notify_comments = ? WHERE id = ?");
@@ -48,7 +46,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_stmt_execute($stmt)) {
             $message = "Preferences updated successfully!";
             $messageType = 'success';
-            // Atualizar os dados exibidos
             $user_data['notify_comments'] = $notify_comments;
         } else {
             error_log("Preferences update failed: " . mysqli_stmt_error($stmt));
@@ -59,7 +56,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Função para mascarar o email
 function mask_email($email) {
     $parts = explode('@', $email);
     if (count($parts) != 2) return $email;
@@ -89,7 +85,6 @@ include 'includes/header.php';
                         </div>
                     <?php endif; ?>
                     
-                    <!-- Informações do Usuário -->
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <div class="card border-0 bg-light">
@@ -132,8 +127,6 @@ include 'includes/header.php';
                             <div class="card border-0 bg-light">
                                 <div class="card-body">
                                     <h5 class="card-title text-muted mb-3">Account Settings</h5>
-                                    
-                                    <!-- Formulário de Preferências -->
                                     <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="post">
                                         <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                                         
@@ -158,8 +151,6 @@ include 'includes/header.php';
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Botões de Ação -->
                     <div class="d-grid gap-2 d-md-flex justify-content-md-center">
                         <a href="edit_profile.php" class="btn btn-camagru btn-lg me-md-2">
                             <i class="fas fa-edit"></i> Edit Profile
