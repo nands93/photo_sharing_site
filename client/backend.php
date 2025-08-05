@@ -44,19 +44,71 @@
             preg_match('/[^A-Za-z0-9]/', $password);
     }
 
+    function validate_photo_id($photo_id) {
+        return is_numeric($photo_id) && $photo_id > 0 && $photo_id <= PHP_INT_MAX;
+    }
+
+    function validate_comment_text($comment) {
+        $comment = trim($comment);
+        
+        // Verificar tamanho
+        if (empty($comment) || strlen($comment) > 500) {
+            return false;
+        }
+        
+        // Verificar caracteres perigosos
+        if (preg_match('/<script|javascript:|data:|vbscript:|on\w+\s*=/i', $comment)) {
+            return false;
+        }
+        
+        // Verificar SQL injection patterns
+        if (preg_match('/(\bUNION\b|\bSELECT\b|\bINSERT\b|\bDELETE\b|\bUPDATE\b|\bDROP\b)/i', $comment)) {
+            return false;
+        }
+        
+        return true;
+    }
+
+    function sanitize_filename($filename) {
+        $filename = preg_replace('/[^a-zA-Z0-9._-]/', '', $filename);
+        $filename = trim($filename, '.');
+        return substr($filename, 0, 255);
+    }
+
     function sanitize_input($data) {
         return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
     }
 
     function generate_csrf_token() {
-        if (!isset($_SESSION['csrf_token'])) {
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        // Gerar token único por formulário
+        $token = bin2hex(random_bytes(32));
+        $_SESSION['csrf_tokens'][$token] = time();
+        
+        // Limpar tokens expirados
+        $now = time();
+        foreach ($_SESSION['csrf_tokens'] as $stored_token => $timestamp) {
+            if (($now - $timestamp) > 3600) {
+                unset($_SESSION['csrf_tokens'][$stored_token]);
+            }
         }
-        return $_SESSION['csrf_token'];
+        
+        return $token;
     }
 
     function verify_csrf_token($token) {
-        return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+        if (!isset($_SESSION['csrf_tokens'][$token])) {
+            return false;
+        }
+        
+        $timestamp = $_SESSION['csrf_tokens'][$token];
+        if ((time() - $timestamp) > 3600) {
+            unset($_SESSION['csrf_tokens'][$token]);
+            return false;
+        }
+        
+        // Token de uso único
+        // unset($_SESSION['csrf_tokens'][$token]);
+        return true;
     }
 
     function user_exists($conn, $username, $email) {
@@ -82,8 +134,9 @@
     }
 
     function check_rate_limit($action, $max_attempts = 5, $time_window = 300) {
-        $key = $action . '_attempts';
-        $time_key = $action . '_last_attempt';
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $key = $action . '_attempts_' . hash('sha256', $ip);
+        $time_key = $action . '_last_attempt_' . hash('sha256', $ip);
         
         if (!isset($_SESSION[$key])) {
             $_SESSION[$key] = 0;
@@ -97,6 +150,11 @@
         
         $_SESSION[$key]++;
         $_SESSION[$time_key] = time();
+        
+        // Log tentativas suspeitas
+        if ($_SESSION[$key] > $max_attempts) {
+            error_log("Rate limit exceeded for action: $action, IP: $ip, Attempts: " . $_SESSION[$key]);
+        }
         
         return $_SESSION[$key] <= $max_attempts;
     }
@@ -119,5 +177,23 @@
             }
         }
         return false;
+    }
+
+    function security_log($action, $details = []) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        $user_id = $_SESSION['user_id'] ?? 'anonymous';
+        $timestamp = date('Y-m-d H:i:s');
+        
+        $log_entry = [
+            'timestamp' => $timestamp,
+            'action' => $action,
+            'user_id' => $user_id,
+            'ip' => $ip,
+            'user_agent' => $user_agent,
+            'details' => $details
+        ];
+        
+        error_log("SECURITY: " . json_encode($log_entry));
     }
 ?>

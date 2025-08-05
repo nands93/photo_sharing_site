@@ -5,6 +5,9 @@
     $message = '';
     $messageType = '';
 
+    // Definir token CSRF antes de incluir o header
+    $csrf_token = '';
+
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $csrf_token = $_POST['csrf_token'] ?? '';
         if (!verify_csrf_token($csrf_token)) {
@@ -23,7 +26,7 @@
                 $message = "Please fill in all fields.";
                 $messageType = 'error';
             } elseif (!validate_username($username)) {
-                $message = "Ivalid username. Use 3-30 characters, letters, numbers, and underscores only.";
+                $message = "Invalid username. Use 3-30 characters, letters, numbers, and underscores only.";
                 $messageType = 'error';
             } else {
                 $stmt = mysqli_prepare($conn, "SELECT id, username, password, email_verified FROM users WHERE username = ? LIMIT 1");
@@ -73,7 +76,11 @@
             }
         }
     }
-    $csrf_token = generate_csrf_token();
+    
+    // Gerar novo token para o formulário se não foi definido via POST
+    if (empty($csrf_token)) {
+        $csrf_token = generate_csrf_token();
+    }
 
     $page_title = 'Login';
     $page_name = 'Login';

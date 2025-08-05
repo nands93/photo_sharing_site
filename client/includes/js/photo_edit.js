@@ -242,21 +242,40 @@ document.getElementById('capture-btn').onclick = handleCapturePhoto;
 // Salvar imagem
 document.getElementById('save-btn').onclick = function() {
     const dataURL = canvas.toDataURL('image/png');
+    console.log('Sending image data, length:', dataURL.length);
+    
     fetch('save_image.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: dataURL })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Imagem salva com sucesso!');
-            location.reload();
-        } else {
-            alert('Erro ao salvar imagem.');
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.text(); // Primeiro pegar como texto para debug
+    })
+    .then(responseText => {
+        console.log('Raw response:', responseText);
+        try {
+            const data = JSON.parse(responseText);
+            console.log('Parsed JSON:', data);
+            if (data.success) {
+                alert('Imagem salva com sucesso!');
+                location.reload();
+            } else {
+                console.error('Server returned error:', data.error);
+                alert('Erro ao salvar imagem: ' + (data.error || 'Erro desconhecido'));
+            }
+        } catch (parseError) {
+            console.error('Failed to parse JSON:', parseError);
+            console.error('Response was:', responseText);
+            alert('Erro de comunicação com servidor.');
         }
     })
-    .catch(() => alert('Erro ao salvar imagem.'));
+    .catch(error => {
+        console.error('Fetch error:', error);
+        alert('Erro ao salvar imagem: ' + error.message);
+    });
 };
 
 function selectPhoto(photoId, imgElement) {
@@ -280,6 +299,74 @@ function selectPhoto(photoId, imgElement) {
         selectedPreview.style.display = 'block';
         console.log('Preview shown');
     }
+
+    const togglePublicBtn = document.getElementById('toggle-public-btn');
+    if (togglePublicBtn) {
+        const wasPosted = imgElement.getAttribute('data-was-posted') === '1';
+        togglePublicBtn.style.display = wasPosted ? 'block' : 'none';
+    }
+}
+
+function deletePhoto(photoId, imgElement) {
+    if (!confirm('Are you sure you want to delete this photo? This action cannot be undone.')) {
+        return;
+    }
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    
+    fetch('delete_photo.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            photo_id: photoId,
+            csrf_token: csrfToken
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove o elemento da interface
+            const photoContainer = imgElement.closest('.col-6');
+            photoContainer.remove();
+            
+            // Reset selection if this photo was selected
+            if (selectedPhotoId == photoId) {
+                selectedPhotoId = null;
+                const selectedPreview = document.getElementById('selected-photo-preview');
+                if (selectedPreview) {
+                    selectedPreview.style.display = 'none';
+                }
+            }
+            
+            // Show success message
+            alert('Photo deleted successfully!');
+            
+            // Check if gallery is now empty
+            const remainingPhotos = document.querySelectorAll('.gallery-image');
+            if (remainingPhotos.length === 0) {
+                document.getElementById('thumbnails').innerHTML = `
+                    <div class="col-12">
+                        <div class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fs-1">📸</i>
+                                <p class="mt-2">No photos yet!</p>
+                                <small>Start by capturing your first photo with the webcam.</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        } else {
+            alert('Error deleting photo: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting photo. Please try again.');
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -290,12 +377,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectedPreview = document.getElementById('selected-photo-preview');
     const selectedPreviewImg = document.getElementById('selected-preview-img');
     const postPhotoBtn = document.getElementById('post-photo-btn');
+    const deletePhotoBtn = document.getElementById('delete-photo-btn');
     const cancelSelectionBtn = document.getElementById('cancel-selection-btn');
+    const togglePublicBtn = document.getElementById('toggle-public-btn');
     
     console.log('Found elements:', {
         galleryImages: galleryImages.length,
         selectedPreview: !!selectedPreview,
         postPhotoBtn: !!postPhotoBtn,
+        deletePhotoBtn: !!deletePhotoBtn,
         cancelSelectionBtn: !!cancelSelectionBtn
     });
 
@@ -418,6 +508,72 @@ document.addEventListener('DOMContentLoaded', function() {
             .finally(() => {
                 this.disabled = false;
                 this.innerHTML = '📤 Post to Gallery';
+            });
+        });
+    }
+
+    // Delete photo
+    if (deletePhotoBtn) {
+        deletePhotoBtn.addEventListener('click', function() {
+            console.log('Delete photo clicked, selectedPhotoId:', selectedPhotoId);
+            
+            if (!selectedPhotoId) {
+                alert('Please select a photo first.');
+                return;
+            }
+
+            const selectedImg = document.querySelector(`.gallery-image[data-photo-id="${selectedPhotoId}"]`);
+            if (selectedImg) {
+                deletePhoto(selectedPhotoId, selectedImg);
+            }
+        });
+    }
+
+    if (togglePublicBtn) {
+        togglePublicBtn.addEventListener('click', function() {
+            if (!selectedPhotoId) {
+                alert('Please select a photo first.');
+                return;
+            }
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            togglePublicBtn.disabled = true;
+            togglePublicBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Toggling...';
+
+            fetch('toggle_photo_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    photo_id: selectedPhotoId,
+                    csrf_token: csrfToken
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.new_status ? 'Photo is now PUBLIC!' : 'Photo is now PRIVATE!');
+                    // Opcional: atualizar badge na galeria
+                    const selectedImg = document.querySelector(`.gallery-image[data-photo-id="${selectedPhotoId}"]`);
+                    if (selectedImg) {
+                        const badge = selectedImg.parentElement.querySelector('.badge');
+                        if (badge) {
+                            badge.className = data.new_status ? 'badge bg-success position-absolute top-0 end-0 m-1' : 'badge bg-secondary position-absolute top-0 end-0 m-1';
+                            badge.textContent = data.new_status ? 'Public' : 'Private';
+                        }
+                    }
+                } else {
+                    alert('Error: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error toggling status. Please try again.');
+            })
+            .finally(() => {
+                togglePublicBtn.disabled = false;
+                togglePublicBtn.innerHTML = '🔒 Toggle Public/Private';
             });
         });
     }

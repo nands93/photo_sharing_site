@@ -131,3 +131,82 @@ body {
 .gallery-overlay:hover {
     opacity: 1 !important;
 }
+
+/* Gallery and Comments Styles */
+.like-btn {
+    border: none !important;
+    background: none !important;
+    color: #333 !important;
+    text-decoration: none !important;
+    transition: transform 0.2s ease;
+}
+
+.like-btn:hover {
+    transform: scale(1.1);
+    color: #e74c3c !important;
+}
+
+.like-btn:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.comment {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.comment:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.comments-list {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 8px;
+    background-color: rgba(255,255,255,0.5);
+}
+
+.comments-list:empty {
+    border: none;
+    padding: 0;
+}
+
+.add-comment-form .form-control {
+    border-radius: 20px 0 0 20px;
+}
+
+.add-comment-form .btn {
+    border-radius: 0 20px 20px 0;
+    border-left: none;
+}
+
+/* Gallery hover effects */
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+    transition: all 0.3s ease;
+}
+
+.card-img-top {
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.02);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .comments-list {
+        max-height: 100px;
+    }
+    
+    .like-btn {
+        font-size: 0.9rem;
+    }
+}

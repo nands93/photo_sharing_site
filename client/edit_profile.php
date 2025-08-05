@@ -28,17 +28,13 @@ if (!$current_user) {
 }
 
 function mask_email($email) {
-    $parts = explode('@', $email);
-    if (count($parts) != 2) return $email;
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return '[Email inválido]';
+    }
     
-    $username = $parts[0];
-    $domain = $parts[1];
+    $hash = substr(hash('sha256', $email . 'camagru_salt'), 0, 8);
     
-    $masked_username = substr($username, 0, 2) . str_repeat('*', max(2, strlen($username) - 2));
-    
-    $masked_domain = substr($domain, 0, 2) . str_repeat('*', max(2, strlen($domain) - 2));
-    
-    return $masked_username . '@' . $masked_domain;
+    return "****@****.*** (ID: {$hash})";
 }
 
 $masked_email = mask_email($current_user['email']);
@@ -88,8 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             if (!empty($new_email) && $new_email !== $masked_email && $new_email !== $current_user['email']) {
-                if (!validate_email($new_email)) {
+                if ($new_email === $masked_email) {
+                    $new_email = '';
+                } elseif (!validate_email($new_email)) {
                     $message = "Invalid email format.";
+                    $messageType = 'error';
+                } elseif (strlen($new_email) > 254) { // Limite RFC 5321
+                    $message = "Email address too long.";
                     $messageType = 'error';
                 } else {
                     $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email = ? AND id != ? LIMIT 1");
@@ -98,8 +99,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     mysqli_stmt_store_result($stmt);
                     
                     if (mysqli_stmt_num_rows($stmt) > 0) {
-                        $message = "Email already exists.";
+                        $message = "Unable to update email. Please try a different address.";
                         $messageType = 'error';
+                        security_log('email_change_blocked', [
+                            'reason' => 'duplicate_email',
+                            'attempted_email' => hash('sha256', $new_email)
+                        ]);
                     } else {
                         $updates[] = "email = ?, email_verified = 0, confirmation_token = ?";
                         $confirmation_token = generate_token();

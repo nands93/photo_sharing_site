@@ -1,10 +1,38 @@
 <?php
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Content-Security-Policy: default-src \'self\'; script-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; style-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; img-src \'self\' data:');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
 if (!isset($page_title)) {
     $page_title = 'Camagru';
 }
 if (!isset($page_name)) {
     $page_name = 'Camagru';
 }
+
+if (!isset($csrf_token)) {
+    if (isset($_SESSION['user_id'])) {
+        // Para usuários logados, usar um token persistente durante a sessão
+        if (!isset($_SESSION['current_csrf_token']) || 
+            !isset($_SESSION['csrf_tokens'][$_SESSION['current_csrf_token']]) ||
+            (time() - $_SESSION['csrf_tokens'][$_SESSION['current_csrf_token']]) > 3000) {
+            
+            $csrf_token = generate_csrf_token();
+            $_SESSION['current_csrf_token'] = $csrf_token;
+        } else {
+            $csrf_token = $_SESSION['current_csrf_token'];
+        }
+    } else {
+        // Para usuários não logados, gerar token único por página se não existir
+        $csrf_token = generate_csrf_token();
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html>

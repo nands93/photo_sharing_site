@@ -59,8 +59,8 @@ if ($is_public) {
     exit();
 }
 
-// Marcar a foto como pública (postada na galeria principal)
-$stmt = mysqli_prepare($conn, "UPDATE user_photos SET is_public = 1 WHERE id = ?");
+// Marcar a foto como pública (postada na galeria principal) e registrar que já foi postada
+$stmt = mysqli_prepare($conn, "UPDATE user_photos SET is_public = 1, was_posted = 1 WHERE id = ?");
 mysqli_stmt_bind_param($stmt, "i", $photo_id);
 
 if (mysqli_stmt_execute($stmt)) {

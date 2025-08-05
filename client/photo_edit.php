@@ -86,7 +86,7 @@ include 'includes/header.php';
                         <?php
                         // Buscar imagens do usuário no banco de dados
                         $stmt = mysqli_prepare($conn, "
-                            SELECT id, file_path, filename 
+                            SELECT id, file_path, filename, is_public, was_posted
                             FROM user_photos 
                             WHERE user_id = ? AND is_active = 1 
                             ORDER BY created_at DESC LIMIT 20
@@ -97,18 +97,26 @@ include 'includes/header.php';
                         
                         if (mysqli_num_rows($result) > 0) {
                             while ($photo = mysqli_fetch_assoc($result)) {
+                                $was_posted = $photo['is_public'] ? 1 : ($photo['was_posted'] ?? 0);
+                                $statusBadge = $photo['is_public'] ? 
+                                    '<span class="badge bg-success position-absolute top-0 end-0 m-1" style="font-size: 0.7em;">Public</span>' : 
+                                    '<span class="badge bg-secondary position-absolute top-0 end-0 m-1" style="font-size: 0.7em;">Private</span>';
+
                                 echo '
                                 <div class="col-6">
                                     <div class="position-relative">
                                         <img src="' . htmlspecialchars($photo['file_path']) . '" 
-                                             alt="' . htmlspecialchars($photo['filename']) . '" 
-                                             class="img-fluid rounded gallery-image" 
-                                             style="height: 120px; width: 100%; object-fit: cover; cursor: pointer; transition: all 0.3s;"
-                                             data-photo-id="' . $photo['id'] . '"
-                                             title="Click to select and post">
+                                            alt="' . htmlspecialchars($photo['filename']) . '" 
+                                            class="img-fluid rounded gallery-image" 
+                                            style="height: 120px; width: 100%; object-fit: cover; cursor: pointer; transition: all 0.3s;"
+                                            data-photo-id="' . $photo['id'] . '"
+                                            data-is-public="' . $photo['is_public'] . '"
+                                            data-was-posted="' . ($photo['was_posted'] ?? 0) . '"
+                                            title="Click to select">
+                                        ' . $statusBadge . '
                                         <div class="gallery-overlay position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center" 
-                                             style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;">
-                                            <span class="text-white">📤 Post</span>
+                                            style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;">
+                                            <span class="text-white">🖱️ Select</span>
                                         </div>
                                     </div>
                                 </div>';
@@ -131,18 +139,24 @@ include 'includes/header.php';
                     
                     <!-- Selected Photo Preview -->
                     <div id="selected-photo-preview" class="mt-4 pt-3 border-top" style="display: none;">
-                        <h6 class="mb-3">Selected Photo:</h6>
-                        <div class="text-center mb-3">
-                            <img id="selected-preview-img" class="img-fluid rounded" style="max-height: 150px;">
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button id="post-photo-btn" class="btn btn-camagru">
-                                📤 Post to Gallery
-                            </button>
-                            <button id="cancel-selection-btn" class="btn btn-outline-secondary btn-sm">
-                                Cancel Selection
-                            </button>
-                        </div>
+                    <h6 class="mb-3">Selected Photo:</h6>
+                    <div class="text-center mb-3">
+                        <img id="selected-preview-img" class="img-fluid rounded" style="max-height: 150px;">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button id="post-photo-btn" class="btn btn-camagru">
+                            📤 Post to Gallery
+                        </button>
+                        <button id="toggle-public-btn" class="btn btn-warning" style="display:none;">
+                            🔒 Toggle Public/Private
+                        </button>
+                        <button id="delete-photo-btn" class="btn btn-danger">
+                            🗑️ Delete Photo
+                        </button>
+                        <button id="cancel-selection-btn" class="btn btn-outline-secondary btn-sm">
+                            Cancel Selection
+                        </button>
+                    </div>
                     </div>
                     
                     <!-- Quick Actions -->
@@ -170,26 +184,10 @@ include 'includes/header.php';
             <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
         </div>
         <div class="toast-body">
-            Click on gallery images to select and post them to the main gallery!
+            Click on gallery images to select them, then post to main gallery or delete!
         </div>
     </div>
 </div>
-
-<style>
-.gallery-image:hover + .gallery-overlay,
-.gallery-image:hover ~ .gallery-overlay {
-    opacity: 1 !important;
-}
-
-.gallery-image.selected {
-    border: 3px solid #bfa76a;
-    transform: scale(0.95);
-}
-
-.gallery-overlay:hover {
-    opacity: 1 !important;
-}
-</style>
 
 <script src="includes/js/photo_edit.js"></script>
 <script>
