@@ -117,3 +117,17 @@ body {
     footer {
         flex-shrink: 0;
     }
+
+.gallery-image:hover + .gallery-overlay,
+.gallery-image:hover ~ .gallery-overlay {
+    opacity: 1 !important;
+}
+
+.gallery-image.selected {
+    border: 3px solid #bfa76a;
+    transform: scale(0.95);
+}
+
+.gallery-overlay:hover {
+    opacity: 1 !important;
+}

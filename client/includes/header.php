@@ -12,6 +12,9 @@ if (!isset($page_name)) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($page_title); ?></title>
+    <?php if (isset($_SESSION['user_id'])): ?>
+    <meta name="csrf-token" content="<?php echo generate_csrf_token(); ?>">
+    <?php endif; ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <link href="style.css" rel="stylesheet">
 </head>

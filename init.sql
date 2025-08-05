@@ -2,7 +2,6 @@ CREATE DATABASE IF NOT EXISTS camagru CHARACTER SET utf8mb4 COLLATE utf8mb4_unic
 
 USE camagru;
 
--- Criar tabela de usuários
 CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(30) NOT NULL UNIQUE,
@@ -18,14 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
     last_login TIMESTAMP NULL,
     notify_comments BOOLEAN DEFAULT TRUE,
     
-    -- Índices para performance
     KEY idx_username (username),
     KEY idx_email (email),
     KEY idx_active (is_active),
     KEY idx_confirmation_token (confirmation_token)
 ) ENGINE=InnoDB;
 
--- Criar tabela de fotos dos usuários
 CREATE TABLE IF NOT EXISTS user_photos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -43,10 +40,12 @@ CREATE TABLE IF NOT EXISTS user_photos (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
+    is_public BOOLEAN DEFAULT FALSE, -- Nova coluna para controlar se está na galeria principal
     
     KEY idx_user_id (user_id),
     KEY idx_username (username),
     KEY idx_active (is_active),
+    KEY idx_public (is_public), -- Novo índice
     KEY idx_created_at (created_at),
     KEY idx_upload_method (upload_method),
     
@@ -54,19 +53,48 @@ CREATE TABLE IF NOT EXISTS user_photos (
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Criar tabela para logs de segurança (opcional)
-CREATE TABLE IF NOT EXISTS security_logs (
+CREATE TABLE IF NOT EXISTS comments (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NULL,
-    action VARCHAR(50) NOT NULL,
+    photo_id INT NOT NULL,
+    user_id INT NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    comment_text TEXT NOT NULL,
     ip_address VARCHAR(45) NULL,
     user_agent TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
     
+    KEY idx_photo_id (photo_id),
     KEY idx_user_id (user_id),
-    KEY idx_action (action),
+    KEY idx_username (username),
+    KEY idx_active (is_active),
     KEY idx_created_at (created_at),
     
-    CONSTRAINT fk_security_logs_user_id 
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    CONSTRAINT fk_comments_photo_id 
+        FOREIGN KEY (photo_id) REFERENCES user_photos(id) ON DELETE CASCADE,
+    CONSTRAINT fk_comments_user_id 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS likes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    photo_id INT NOT NULL,
+    user_id INT NOT NULL,
+    username VARCHAR(30) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Unique constraint para prevenir likes duplicados
+    UNIQUE KEY unique_photo_user (photo_id, user_id),
+    
+    KEY idx_photo_id (photo_id),
+    KEY idx_user_id (user_id),
+    KEY idx_username (username),
+    KEY idx_created_at (created_at),
+    
+    CONSTRAINT fk_likes_photo_id 
+        FOREIGN KEY (photo_id) REFERENCES user_photos(id) ON DELETE CASCADE,
+    CONSTRAINT fk_likes_user_id 
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

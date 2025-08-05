@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 require_once 'backend.php';
 
@@ -17,60 +16,190 @@ $user_id = $_SESSION['user_id'];
 
 include 'includes/header.php';
 ?>
-<main style="display: flex; gap: 2rem;">
-    <!-- Main Section -->
-    <section style="flex: 2;">
-        <h2>Webcam Preview</h2>
-        <div id="webcam-container">
-            <video id="webcam" autoplay playsinline width="480" height="360" style="border:1px solid #ccc;"></video>
-            <canvas id="canvas" width="480" height="360" style="display:none; border:1px solid #ccc;"></canvas>
-            <div id="captured-photo" style="display:none;">
-                <img id="photo-result" width="480" height="360" style="border:1px solid #ccc;">
+
+<div class="container-fluid my-4">
+    <div class="row g-4">
+        <!-- Main Section -->
+        <div class="col-lg-8">
+            <div class="card shadow custom-card h-100">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">📸 Camagru Studio</h3>
+                    
+                    <!-- Webcam Container -->
+                    <div id="webcam-container" class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <video id="webcam" autoplay playsinline width="480" height="360" 
+                                   class="rounded border shadow-sm" style="max-width: 100%; height: auto;"></video>
+                            <canvas id="canvas" width="480" height="360" 
+                                    class="rounded border shadow-sm position-absolute top-0 start-0" 
+                                    style="display:none; max-width: 100%; height: auto;"></canvas>
+                        </div>
+                        
+                        <div id="captured-photo" style="display:none;" class="mt-3">
+                            <img id="photo-result" width="480" height="360" 
+                                 class="rounded border shadow-sm" style="max-width: 100%; height: auto;">
+                        </div>
+                    </div>
+
+                    <!-- Stickers Section -->
+                    <div id="superposable-images" class="mb-4">
+                        <h5 class="mb-3">✨ Stickers & Effects</h5>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            <div class="sticker-container">
+                                <img src="images/stickers/hat.png" alt="Hat" class="sticker-thumb btn btn-outline-secondary p-2" 
+                                     style="width:60px; height:60px; object-fit: contain; cursor:pointer;">
+                                <small class="d-block text-center mt-1 text-muted">Hat</small>
+                            </div>
+                            <div class="sticker-container">
+                                <img src="images/stickers/glasses.png" alt="Glasses" class="sticker-thumb btn btn-outline-secondary p-2" 
+                                     style="width:60px; height:60px; object-fit: contain; cursor:pointer;">
+                                <small class="d-block text-center mt-1 text-muted">Glasses</small>
+                            </div>
+                            <div class="sticker-container">
+                                <img src="images/stickers/mustache.png" alt="Mustache" class="sticker-thumb btn btn-outline-secondary p-2" 
+                                     style="width:60px; height:60px; object-fit: contain; cursor:pointer;">
+                                <small class="d-block text-center mt-1 text-muted">Mustache</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="text-center">
+                        <button id="capture-btn" class="btn btn-camagru btn-lg me-2">
+                            📷 Capture Photo
+                        </button>
+                        <button id="save-btn" class="btn btn-success btn-lg" style="display:none;">
+                            💾 Save Photo
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="superposable-images" style="margin: 1rem 0;">
-            <h3>Superposable Images</h3>
-            <img src="images/stickers/hat.png" alt="Hat" class="sticker-thumb" style="width:60px;cursor:pointer;">
-            <img src="images/stickers/glasses.png" alt="Glasses" class="sticker-thumb" style="width:60px;cursor:pointer;">
-        </div>
-        <button id="capture-btn">Capture Photo</button>
-        <button id="save-btn" style="display:none; margin-left:1rem;">Save</button>
-    </section>
 
-    <!-- Side Section -->
-    <aside style="flex: 1;">
-        <h3>Previous Pictures</h3>
-        <div id="thumbnails" style="display: flex; flex-direction: column; gap: 0.5rem;">
-            <?php
-            // Buscar imagens do usuário no banco de dados com mais informações
-            $stmt = mysqli_prepare($conn, "
-                SELECT file_path, filename, created_at, file_size, width, height 
-                FROM user_photos 
-                WHERE user_id = ? AND is_active = 1 
-                ORDER BY created_at DESC LIMIT 10
-            ");
-            mysqli_stmt_bind_param($stmt, "i", $user_id);
-            mysqli_stmt_execute($stmt);
-            $result = mysqli_stmt_get_result($stmt);
-            
-            while ($photo = mysqli_fetch_assoc($result)) {
-                $created_date = date('d/m/Y H:i', strtotime($photo['created_at']));
-                $file_size_kb = round($photo['file_size'] / 1024, 1);
-                echo '<div style="border: 1px solid #ddd; padding: 5px; border-radius: 5px;">
-                        <img src="' . htmlspecialchars($photo['file_path']) . '" 
-                             alt="' . htmlspecialchars($photo['filename']) . '" 
-                             style="width:100px; cursor:pointer;" 
-                             title="' . $created_date . ' - ' . $file_size_kb . 'KB">
-                        <div style="font-size: 11px; color: #666;">
-                            ' . $created_date . '<br>
-                            ' . $file_size_kb . 'KB
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card shadow custom-card h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">🖼️ My Gallery</h5>
+                    
+                    <div id="thumbnails" class="row g-2" style="max-height: 60vh; overflow-y: auto;">
+                        <?php
+                        // Buscar imagens do usuário no banco de dados
+                        $stmt = mysqli_prepare($conn, "
+                            SELECT id, file_path, filename 
+                            FROM user_photos 
+                            WHERE user_id = ? AND is_active = 1 
+                            ORDER BY created_at DESC LIMIT 20
+                        ");
+                        mysqli_stmt_bind_param($stmt, "i", $user_id);
+                        mysqli_stmt_execute($stmt);
+                        $result = mysqli_stmt_get_result($stmt);
+                        
+                        if (mysqli_num_rows($result) > 0) {
+                            while ($photo = mysqli_fetch_assoc($result)) {
+                                echo '
+                                <div class="col-6">
+                                    <div class="position-relative">
+                                        <img src="' . htmlspecialchars($photo['file_path']) . '" 
+                                             alt="' . htmlspecialchars($photo['filename']) . '" 
+                                             class="img-fluid rounded gallery-image" 
+                                             style="height: 120px; width: 100%; object-fit: cover; cursor: pointer; transition: all 0.3s;"
+                                             data-photo-id="' . $photo['id'] . '"
+                                             title="Click to select and post">
+                                        <div class="gallery-overlay position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center" 
+                                             style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;">
+                                            <span class="text-white">📤 Post</span>
+                                        </div>
+                                    </div>
+                                </div>';
+                            }
+                        } else {
+                            echo '
+                            <div class="col-12">
+                                <div class="text-center py-4">
+                                    <div class="text-muted">
+                                        <i class="fs-1">📸</i>
+                                        <p class="mt-2">No photos yet!</p>
+                                        <small>Start by capturing your first photo with the webcam.</small>
+                                    </div>
+                                </div>
+                            </div>';
+                        }
+                        mysqli_stmt_close($stmt);
+                        ?>
+                    </div>
+                    
+                    <!-- Selected Photo Preview -->
+                    <div id="selected-photo-preview" class="mt-4 pt-3 border-top" style="display: none;">
+                        <h6 class="mb-3">Selected Photo:</h6>
+                        <div class="text-center mb-3">
+                            <img id="selected-preview-img" class="img-fluid rounded" style="max-height: 150px;">
                         </div>
-                      </div>';
-            }
-            mysqli_stmt_close($stmt);
-            ?>
+                        <div class="d-grid gap-2">
+                            <button id="post-photo-btn" class="btn btn-camagru">
+                                📤 Post to Gallery
+                            </button>
+                            <button id="cancel-selection-btn" class="btn btn-outline-secondary btn-sm">
+                                Cancel Selection
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-4 pt-3 border-top">
+                        <div class="d-grid gap-2">
+                            <a href="index.php" class="btn btn-outline-secondary btn-sm">
+                                🏠 Back to Gallery
+                            </a>
+                            <a href="profile.php" class="btn btn-outline-secondary btn-sm">
+                                👤 View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </aside>
-</main>
-<script src="includes/js/edit_image.js"></script>
+    </div>
+</div>
+
+<!-- Instructions Toast (Optional) -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+    <div class="toast" id="instructionToast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header">
+            <strong class="me-auto">💡 Quick Tip</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            Click on gallery images to select and post them to the main gallery!
+        </div>
+    </div>
+</div>
+
+<style>
+.gallery-image:hover + .gallery-overlay,
+.gallery-image:hover ~ .gallery-overlay {
+    opacity: 1 !important;
+}
+
+.gallery-image.selected {
+    border: 3px solid #bfa76a;
+    transform: scale(0.95);
+}
+
+.gallery-overlay:hover {
+    opacity: 1 !important;
+}
+</style>
+
+<script src="includes/js/photo_edit.js"></script>
+<script>
+// Show instruction toast on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const toast = new bootstrap.Toast(document.getElementById('instructionToast'));
+    setTimeout(() => {
+        toast.show();
+    }, 1000);
+});
+</script>
+
 <?php include 'includes/footer.php'; ?>
