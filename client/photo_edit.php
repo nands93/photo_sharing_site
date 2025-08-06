@@ -66,9 +66,6 @@ include 'includes/header.php';
                             </div>
                         </div>
                     </div>
-
-                    <!-- Action Buttons -->
-                    <!-- Action Buttons -->
                     <div class="text-center">
                         <button id="capture-btn" class="btn btn-camagru btn-lg me-2 d-none">
                             📷 Capture Photo
