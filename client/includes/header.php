@@ -41,8 +41,9 @@ if (!isset($csrf_token)) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <?php if (isset($_SESSION['user_id'])): ?>
-    <meta name="csrf-token" content="<?php echo generate_csrf_token(); ?>">
+    <meta name="current-user-id" content="<?php echo $_SESSION['user_id']; ?>">
     <?php endif; ?>
+    <meta name="csrf-token" content="<?php echo generate_csrf_token(); ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <link href="style.css" rel="stylesheet">
 </head>
@@ -54,13 +55,22 @@ if (!isset($csrf_token)) {
                 <h1 class="mb-0 h3 fw-bold text-dark"><?php echo htmlspecialchars($page_name); ?></h1>
             </a>
             <div class="d-flex align-items-center">
+            <?php if (isset($_SESSION['user_id']) && isset($_SESSION['username'])): ?>
+                <?php if (basename($_SERVER['PHP_SELF']) !== 'photo_edit.php'): ?>
+                    <a href="photo_edit.php" class="btn btn-camagru btn-sm me-3">New Post</a>
+                <?php endif; ?>
+            <?php endif; ?>
+            <div class="d-flex align-items-center">
                 <ul class="navbar-nav d-flex flex-row">
                     <li class="nav-item me-3">
                         <a class="nav-link" href="index.php">Camagru</a>
                     </li>
                     <?php if (isset($_SESSION['user_id'])): ?>
-                    <li class="nav-item me-3">
-                        <a class="nav-link" href="profile.php">Profile</a>
+                    <li class="nav-item me-3 d-flex align-items-center">
+                        <span class="me-1">Olá,</span>
+                        <a href="profile.php" class="nav-link fw-semibold p-0 text-dark text-decoration-none">
+                            <?php echo sanitize_input($_SESSION['username']); ?>
+                        </a>
                     </li>
                     <li class="nav-item">
                             <a class="nav-link text-danger fw-semibold" 

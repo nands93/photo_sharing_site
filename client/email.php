@@ -110,4 +110,65 @@ function reset_password_email($email, $token) {
         return false;
     }
 }
+
+function comment_notification($owner_email, $photo_owner_username, $commenter_username, $comment_text) {
+    $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+    $dotenv->safeLoad();
+    $api_key = $_ENV['SENDGRID_API_KEY'];
+    if (!$api_key) {
+        error_log("SendGrid API key not set in environment variables.");
+        return false;
+    }
+
+    $subject = "New comment on your photo - Camagru";
+    
+    $html_content = "
+    <html>
+    <head>
+        <title>New Comment Notification</title>
+    </head>
+    <body>
+        <h2>You have a new comment!</h2>
+        <p>Hi {$photo_owner_username},</p>
+        <p><strong>{$commenter_username}</strong> commented on your photo:</p>
+        <blockquote style='background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007bff;'>
+            " . htmlspecialchars($comment_text) . "
+        </blockquote>
+        <p><a href='" . get_base_url() . "/index.php'>View your photos on Camagru</a></p>
+        <hr>
+        <small>You can disable these notifications in your <a href='" . get_base_url() . "/profile.php'>profile settings</a>.</small>
+    </body>
+    </html>
+    ";
+    
+    $mail = new Mail();
+    $mail->setFrom("femarquedev@gmail.com", "Camagru");
+    $mail->setSubject($subject);
+    $mail->addTo($owner_email, $photo_owner_username);
+    $mail->addContent("text/html", $html_content);
+
+    $sendgrid = new \SendGrid($api_key);
+    
+    try {
+        $response = $sendgrid->send($mail);
+        
+        if ($response->statusCode() == 202) {
+            error_log("Comment notification email sent successfully to: $owner_email");
+            return true;
+        } else {
+            error_log("SendGrid API error. Status Code: " . $response->statusCode() . ", Body: " . $response->body());
+            return false;
+        }
+    } catch (Exception $e) {
+        error_log("SendGrid exception: " . $e->getMessage());
+        return false;
+    }
+}
+
+function get_base_url() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $path = dirname($_SERVER['SCRIPT_NAME']);
+    return $protocol . '://' . $host . $path;
+}
 ?>

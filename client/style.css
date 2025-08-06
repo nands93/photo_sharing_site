@@ -1,7 +1,14 @@
-body {
-    background: linear-gradient(135deg, #f0ece1 0%, #dad1bf 100%);
-    min-height: 100vh;
+html, body {
+    height: 100%;
 }
+
+body {
+    background: #dad1bf;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
 .custom-navbar {
     background: rgba(240, 236, 225, 0.95);
     backdrop-filter: blur(10px);
@@ -99,17 +106,7 @@ body {
     .custom-footer .nav-link:hover {
         color: #b37e03 !important;
     }
-    
-    /* Garante que o footer fique no final da página */
-    html, body {
-        height: 100%;
-    }
-    
-    body {
-        display: flex;
-        flex-direction: column;
-    }
-    
+
     .container-fluid {
         flex: 1 0 auto;
     }
@@ -176,6 +173,48 @@ body {
     padding: 0;
 }
 
+.delete-comment-btn {
+    border: none !important;
+    background: none !important;
+    color: #dc3545 !important;
+    text-decoration: none !important;
+    padding: 2px 4px !important;
+    border-radius: 3px !important;
+    transition: all 0.2s ease !important;
+    font-size: 14px !important;
+    line-height: 1 !important;
+}
+
+.delete-comment-btn:hover {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+    color: #dc3545 !important;
+    text-decoration: none !important;
+    transform: scale(1.1) !important;
+}
+
+.delete-comment-btn:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
+    text-decoration: none !important;
+}
+
+.delete-comment-btn:disabled {
+    opacity: 0.6 !important;
+    pointer-events: none !important;
+    text-decoration: none !important;
+}
+
+/* Ensure no underlines on any button-like elements */
+.btn-link {
+    text-decoration: none !important;
+}
+
+.btn-link:hover,
+.btn-link:focus,
+.btn-link:active {
+    text-decoration: none !important;
+}
+
 .add-comment-form .form-control {
     border-radius: 20px 0 0 20px;
 }
@@ -198,6 +237,72 @@ body {
 
 .card:hover .card-img-top {
     transform: scale(1.02);
+}
+
+.pagination {
+    --bs-pagination-padding-x: 0.75rem;
+    --bs-pagination-padding-y: 0.375rem;
+    --bs-pagination-font-size: 1rem;
+    --bs-pagination-color: #222;
+    --bs-pagination-bg: rgba(240, 236, 225, 0.95);
+    --bs-pagination-border-width: 1px;
+    --bs-pagination-border-color: rgba(0, 0, 0, 0.05);
+    --bs-pagination-border-radius: 0.375rem;
+    --bs-pagination-hover-color: #222;
+    --bs-pagination-hover-bg: #bfa76a;
+    --bs-pagination-hover-border-color: #bfa76a;
+    --bs-pagination-focus-color: #222;
+    --bs-pagination-focus-bg: #bfa76a;
+    --bs-pagination-focus-box-shadow: 0 0 0 0.25rem rgba(191, 167, 106, 0.25);
+    --bs-pagination-active-color: #222;
+    --bs-pagination-active-bg: #bfa76a;
+    --bs-pagination-active-border-color: #bfa76a;
+    --bs-pagination-disabled-color: #6c757d;
+    --bs-pagination-disabled-bg: rgba(240, 236, 225, 0.5);
+    --bs-pagination-disabled-border-color: rgba(0, 0, 0, 0.05);
+}
+
+.page-link {
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.page-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-item.active .page-link {
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(191, 167, 106, 0.3);
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.6;
+}
+
+#webcam-container {
+    position: relative;
+    display: inline-block;
+}
+
+#webcam {
+    display: block;
+}
+
+#canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+/* Garantir que o container mantenha o canvas alinhado */
+#webcam-container video,
+#webcam-container canvas {
+    border-radius: 0.375rem; /* mesmo border-radius do Bootstrap */
 }
 
 /* Responsive adjustments */

@@ -1,5 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
+    const currentUserId = parseInt(document.querySelector('meta[name="current-user-id"]')?.getAttribute('content')) || null;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    window.currentUserId = currentUserId;
+    window.csrfToken = csrfToken;
     
     // Carregar comentários para todas as fotos
     document.querySelectorAll('.comments-section').forEach(section => {
@@ -36,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     const commentsContainer = document.querySelector(`.comments-section[data-photo-id="${photoId}"] .comments-list`);
                     if (commentsContainer) {
-                        displayComments(commentsContainer, data.comments);
+                        displayComments(commentsContainer, data.comments, photoId);
                     }
                 }
             })
@@ -45,26 +49,88 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    function displayComments(container, comments) {
+    function displayComments(container, comments, photoId) {
         if (comments.length === 0) {
             container.innerHTML = '<small class="text-muted">No comments yet. Be the first to comment!</small>';
             return;
         }
-        
         container.innerHTML = comments.map(comment => `
-            <div class="comment mb-2">
+            <div class="comment mb-2" data-comment-id="${comment.id}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <strong class="text-primary">${comment.username}</strong>
                         <p class="mb-1 small">${comment.comment_text}</p>
                     </div>
-                    <small class="text-muted ms-2">${comment.created_at}</small>
+                    <div class="ms-2 d-flex flex-column align-items-end">
+                        <small class="text-muted">${comment.created_at}</small>
+                        ${window.currentUserId && comment.user_id == window.currentUserId ? `
+                            <button class="btn btn-link btn-sm text-danger delete-comment-btn p-0 mt-1" 
+                                    title="Delete comment" 
+                                    data-comment-id="${comment.id}"
+                                    style="font-size: 12px; line-height: 1;">
+                                🗑️
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `).join('');
         
-        // Scroll para o final dos comentários
+        // Adicionar event listener para deletar
+        container.querySelectorAll('.delete-comment-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const commentId = this.dataset.commentId;
+                deleteComment(commentId, photoId);
+            });
+        });
+        
         container.scrollTop = container.scrollHeight;
+    }
+
+    function deleteComment(commentId, photoId) {
+        if (!confirm('Are you sure you want to delete this comment?')) return;
+        
+        // Desabilitar o botão temporariamente
+        const deleteBtn = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (deleteBtn) {
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '⏳';
+        }
+        
+        fetch('comments.php?action=delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                comment_id: commentId,
+                csrf_token: csrfToken
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // Recarregar comentários
+                loadComments(photoId);
+                
+                // Atualizar contador de comentários no HTML
+                updateCommentCount(photoId, -1);
+                
+                // Mostrar feedback visual
+                showNotification('Comment deleted successfully', 'success');
+            } else {
+                alert(data.error || 'Failed to delete comment');
+                if (deleteBtn) {
+                    deleteBtn.disabled = false;
+                    deleteBtn.innerHTML = '🗑️';
+                }
+            }
+        })
+        .catch(() => {
+            alert('Error deleting comment');
+            if (deleteBtn) {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = '🗑️';
+            }
+        });
     }
     
     function addComment(photoId, commentText, inputElement) {
@@ -89,14 +155,12 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 inputElement.value = '';
-                loadComments(photoId); // Recarregar comentários
+                loadComments(photoId);
                 
                 // Atualizar contador de comentários
-                const commentCountSpan = document.querySelector(`[data-photo-id="${photoId}"] .comment-count`);
-                if (commentCountSpan) {
-                    const currentCount = parseInt(commentCountSpan.textContent) || 0;
-                    commentCountSpan.textContent = currentCount + 1;
-                }
+                updateCommentCount(photoId, 1);
+                
+                showNotification('Comment added successfully', 'success');
             } else {
                 alert('Error adding comment: ' + (data.error || 'Unknown error'));
             }
@@ -109,6 +173,43 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
         });
+    }
+    
+    function updateCommentCount(photoId, increment) {
+        // Encontrar o span que mostra o número de comentários
+        const commentSpan = document.querySelector(`[data-photo-id="${photoId}"]`)
+            ?.closest('.card')
+            ?.querySelector('.text-muted');
+        
+        if (commentSpan) {
+            const text = commentSpan.textContent;
+            const match = text.match(/💬 (\d+) comments/);
+            if (match) {
+                const currentCount = parseInt(match[1]);
+                const newCount = Math.max(0, currentCount + increment);
+                commentSpan.innerHTML = `💬 ${newCount} comments`;
+            }
+        }
+    }
+    
+    function showNotification(message, type = 'info') {
+        // Criar notificação simples
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible position-fixed`;
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remover após 3 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
     }
     
     function toggleLike(photoId, buttonElement) {

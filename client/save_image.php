@@ -13,59 +13,7 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
-if (!isset($data['image'])) {
-    error_log("No image data received");
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'No image data']);
-    exit();
-}
-
 try {
-    $image_data = $data['image'];
-    error_log("Image data length: " . strlen($image_data));
-    
-    if (!preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $image_data)) {
-        throw new Exception('Invalid image format');
-    }
-    
-    $image_data = substr($image_data, strpos($image_data, ',') + 1);
-    $image_binary = base64_decode($image_data);
-    if ($image_binary === false) {
-        throw new Exception('Failed to decode image');
-    }
-    
-    $temp_file = tempnam(sys_get_temp_dir(), 'upload_validate_');
-    file_put_contents($temp_file, $image_binary);
-    
-    $image_info = getimagesize($temp_file);
-    if ($image_info === false || !in_array($image_info['mime'], ['image/png', 'image/jpeg'])) {
-        unlink($temp_file);
-        throw new Exception('Invalid or corrupted image file');
-    }
-    
-    $img_clean = imagecreatefromstring($image_binary);
-    if ($img_clean === false) {
-        unlink($temp_file);
-        throw new Exception('Could not process image - file may be corrupted');
-    }
-    
-    $width = imagesx($img_clean);
-    $height = imagesy($img_clean);
-    if ($width > 2048 || $height > 2048 || $width < 1 || $height < 1) {
-        imagedestroy($img_clean);
-        unlink($temp_file);
-        throw new Exception('Image dimensions must be between 1x1 and 2048x2048 pixels');
-    }
-    
-    if (strlen($image_binary) > 5 * 1024 * 1024) {
-        imagedestroy($img_clean);
-        unlink($temp_file);
-        throw new Exception('File too large (max 5MB)');
-    }
-    
-    unlink($temp_file);
-    
     $user_id = $_SESSION['user_id'];
     $stmt_user = mysqli_prepare($conn, "SELECT username FROM users WHERE id = ?");
     mysqli_stmt_bind_param($stmt_user, "i", $user_id);
@@ -73,12 +21,70 @@ try {
     $result_user = mysqli_stmt_get_result($stmt_user);
     $user_info = mysqli_fetch_assoc($result_user);
     mysqli_stmt_close($stmt_user);
-    
+
     if (!$user_info) {
         throw new Exception('User not found');
     }
-    
     $username = $user_info['username'];
+
+    $image_binary = null;
+    $upload_method = '';
+    $original_mime = '';
+
+    // Case 1: Handle file upload from FormData
+    if (isset($_FILES['image_file']) && $_FILES['image_file']['error'] === UPLOAD_ERR_OK) {
+        error_log("Processing uploaded file...");
+        $upload_method = 'upload';
+        $file = $_FILES['image_file'];
+        
+        if ($file['size'] > 5 * 1024 * 1024) { // 5MB
+            throw new Exception('File too large (max 5MB)');
+        }
+
+        $image_info = getimagesize($file['tmp_name']);
+        if ($image_info === false || !in_array($image_info['mime'], ['image/png', 'image/jpeg', 'image/gif'])) {
+            throw new Exception('Invalid or corrupted image file. Only PNG, JPG, and GIF are allowed.');
+        }
+        $original_mime = $image_info['mime'];
+        $image_binary = file_get_contents($file['tmp_name']);
+
+    // Case 2: Handle base64 image data from webcam
+    } else {
+        error_log("Processing base64 image data...");
+        $upload_method = 'webcam';
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['image'])) {
+            error_log("No image data received");
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'No image data']);
+            exit();
+        }
+        $image_data = $data['image'];
+        if (!preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $image_data, $matches)) {
+            throw new Exception('Invalid image format');
+        }
+        $original_mime = 'image/' . $matches[1];
+        $image_data = substr($image_data, strpos($image_data, ',') + 1);
+        $image_binary = base64_decode($image_data);
+    }
+
+    if ($image_binary === false) {
+        throw new Exception('Failed to read or decode image');
+    }
+
+    // --- Common Image Processing and Saving Logic ---
+
+    $img_clean = imagecreatefromstring($image_binary);
+    if ($img_clean === false) {
+        throw new Exception('Could not process image - file may be corrupted');
+    }
+    
+    $width = imagesx($img_clean);
+    $height = imagesy($img_clean);
+    if ($width > 2048 || $height > 2048 || $width < 1 || $height < 1) {
+        imagedestroy($img_clean);
+        throw new Exception('Image dimensions must be between 1x1 and 2048x2048 pixels');
+    }
     
     $safe_username = preg_replace('/[^a-zA-Z0-9_-]/', '', $username);
     if (empty($safe_username)) {
@@ -86,35 +92,22 @@ try {
     }
     
     $timestamp = time();
-    $random_hash = bin2hex(random_bytes(16)); // Aumentar entropia
-    $filename = "{$safe_username}_{$user_id}_{$timestamp}_{$random_hash}.png";
-    
-    if (strlen($filename) > 255) {
-        throw new Exception('Generated filename too long');
-    }
+    $random_hash = bin2hex(random_bytes(16));
+    $filename = "{$safe_username}_{$user_id}_{$timestamp}_{$random_hash}.png"; // Always save as PNG for consistency
     
     $upload_dir = realpath(__DIR__ . "/uploads/");
     if (!$upload_dir) {
-        throw new Exception('Upload directory not found');
-    }
-    
-    if (!is_dir($upload_dir)) {
-        if (!mkdir($upload_dir, 0755, true)) {
-            throw new Exception('Failed to create uploads directory');
+        if (!mkdir(__DIR__ . "/uploads/", 0755, true)) {
+             throw new Exception('Upload directory not found and could not be created.');
         }
-        $upload_dir = realpath($upload_dir);
+        $upload_dir = realpath(__DIR__ . "/uploads/");
     }
     
     $file_path = $upload_dir . DIRECTORY_SEPARATOR . $filename;
     
-    $real_file_path = realpath(dirname($file_path)) . DIRECTORY_SEPARATOR . basename($filename);
-    if (strpos($real_file_path, $upload_dir) !== 0) {
-        throw new Exception('Invalid file path - security violation');
-    }
-    
     error_log("Attempting to save to: " . $file_path);
     
-    if (!imagepng($img_clean, $file_path, 9)) {
+    if (!imagepng($img_clean, $file_path, 9)) { // Save with max compression
         imagedestroy($img_clean);
         throw new Exception('Failed to save image to disk');
     }
@@ -123,66 +116,57 @@ try {
     
     error_log("Image saved successfully");
     
-    if (!file_exists($file_path)) {
-        throw new Exception('File was not saved properly');
-    }
-    
-    $final_image_info = getimagesize($file_path);
-    if ($final_image_info === false) {
-        unlink($file_path);
-        throw new Exception('Saved file is not a valid image');
-    }
-    
     $relative_path = "uploads/" . $filename;
-    
-    $final_width = $final_image_info[0] ?? 0;
-    $final_height = $final_image_info[1] ?? 0;
     $file_size = filesize($file_path);
     
     $ip_address = filter_var($_SERVER['REMOTE_ADDR'] ?? '', FILTER_VALIDATE_IP) ?: 'unknown';
     $user_agent = substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT'] ?? '', ENT_QUOTES, 'UTF-8'), 0, 255);
-    $upload_method = 'webcam';
     
-    error_log("Image info - Width: $final_width, Height: $final_height, Size: $file_size");
+    error_log("Image info - Width: $width, Height: $height, Size: $file_size, Method: $upload_method");
     
+    $is_public = (isset($_POST['make_public']) && $_POST['make_public'] == '1') ? 1 : 0;
+
     $stmt = mysqli_prepare($conn, "
         INSERT INTO user_photos 
-        (user_id, username, filename, file_path, file_size, mime_type, width, height, ip_address, user_agent, upload_method, is_active) 
-        VALUES (?, ?, ?, ?, ?, 'image/png', ?, ?, ?, ?, ?, 1)
+        (user_id, username, filename, file_path, file_size, mime_type, width, height, ip_address, user_agent, upload_method, is_active, was_posted, is_public) 
+        VALUES (?, ?, ?, ?, ?, 'image/png', ?, ?, ?, ?, ?, 1, 1, ?)
     ");
     
     if (!$stmt) {
-        // Se falhar no banco, remover arquivo
         unlink($file_path);
         throw new Exception('Failed to prepare database statement: ' . mysqli_error($conn));
     }
     
-    mysqli_stmt_bind_param($stmt, "isssiiisss", 
+    mysqli_stmt_bind_param($stmt, "isssiiisssi", 
         $user_id, $username, $filename, $relative_path, $file_size, 
-        $final_width, $final_height, $ip_address, $user_agent, $upload_method
+        $width, $height, $ip_address, $user_agent, $upload_method,
+        $is_public
     );
     
     if (mysqli_stmt_execute($stmt)) {
         $photo_id = mysqli_insert_id($conn);
         error_log("Database insert successful, photo_id: $photo_id");
         
-        // Log de auditoria de segurança
         security_log('photo_upload', [
             'photo_id' => $photo_id,
             'filename' => $filename,
             'file_size' => $file_size,
-            'dimensions' => "{$final_width}x{$final_height}",
+            'dimensions' => "{$width}x{$height}",
             'upload_method' => $upload_method
         ]);
         
         echo json_encode([
             'success' => true, 
-            'filename' => $filename,
-            'photo_id' => $photo_id,
-            'message' => 'Photo uploaded successfully'
+            'message' => 'Photo uploaded successfully',
+            'photo' => [
+                'id' => $photo_id,
+                'file_path' => $relative_path,
+                'filename' => $filename,
+                'is_public' => $is_public,
+                'was_posted' => 1
+            ]
         ]);
     } else {
-        // Se falhar no banco, remover arquivo
         unlink($file_path);
         throw new Exception('Failed to save to database: ' . mysqli_stmt_error($stmt));
     }
@@ -192,11 +176,10 @@ try {
 } catch (Exception $e) {
     error_log("Error in save_image.php: " . $e->getMessage());
     
-    // Log de tentativa de upload suspeita
     security_log('photo_upload_failed', [
         'error' => $e->getMessage(),
         'user_id' => $_SESSION['user_id'] ?? null,
-        'data_length' => isset($data['image']) ? strlen($data['image']) : 0
+        'upload_method' => $upload_method ?? 'unknown'
     ]);
     
     http_response_code(500);

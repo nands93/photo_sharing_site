@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'backend.php';
+require_once 'email.php';
 
 header('Content-Type: application/json');
 
@@ -37,7 +38,7 @@ switch ($action) {
         
         // Buscar comentários
         $stmt = mysqli_prepare($conn, "
-            SELECT c.id, c.username, c.comment_text, c.created_at 
+            SELECT c.id, c.username, c.comment_text, c.created_at, c.user_id
             FROM comments c 
             WHERE c.photo_id = ? AND c.is_active = 1 
             ORDER BY c.created_at ASC 
@@ -53,7 +54,8 @@ switch ($action) {
                 'id' => $comment['id'],
                 'username' => htmlspecialchars($comment['username']),
                 'comment_text' => htmlspecialchars($comment['comment_text']),
-                'created_at' => date('M j, H:i', strtotime($comment['created_at']))
+                'created_at' => date('M j, H:i', strtotime($comment['created_at'])),
+                'user_id' => $comment['user_id'] // Adicione isso
             ];
         }
         mysqli_stmt_close($stmt);
@@ -130,8 +132,7 @@ switch ($action) {
                 mysqli_stmt_close($stmt);
                 
                 if ($notify_comments) {
-                    // Aqui você pode implementar o envio de email de notificação
-                    // send_comment_notification_email($owner_email, $photo_owner_username, $username, $comment_text);
+                    comment_notification($owner_email, $photo_owner_username, $username, $comment_text);
                 }
             }
             
@@ -156,6 +157,60 @@ switch ($action) {
             error_log("Failed to insert comment: " . mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
             echo json_encode(['success' => false, 'error' => 'Failed to add comment']);
+        }
+        break;
+
+    case 'delete':
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['success' => false, 'error' => 'Invalid request method']);
+            exit();
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        $comment_id = intval($input['comment_id'] ?? 0);
+        $csrf_token = $input['csrf_token'] ?? '';
+        
+        if (!verify_csrf_token($csrf_token)) {
+            echo json_encode(['success' => false, 'error' => 'Invalid CSRF token']);
+            exit();
+        }
+        
+        if ($comment_id <= 0) {
+            echo json_encode(['success' => false, 'error' => 'Invalid comment ID']);
+            exit();
+        }
+        
+        // Verificar se o comentário existe e pertence ao usuário atual
+        $stmt = mysqli_prepare($conn, "SELECT id, photo_id FROM comments WHERE id = ? AND user_id = ? AND is_active = 1");
+        mysqli_stmt_bind_param($stmt, "ii", $comment_id, $user_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $found_id, $photo_id);
+        mysqli_stmt_fetch($stmt);
+        mysqli_stmt_close($stmt);
+        
+        if (!$found_id) {
+            echo json_encode(['success' => false, 'error' => 'Comment not found or you do not have permission to delete it']);
+            exit();
+        }
+        
+        // Marcar comentário como inativo (soft delete)
+        $stmt = mysqli_prepare($conn, "UPDATE comments SET is_active = 0 WHERE id = ? AND user_id = ?");
+        mysqli_stmt_bind_param($stmt, "ii", $comment_id, $user_id);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            
+            // Log de segurança
+            security_log('comment_deleted', [
+                'comment_id' => $comment_id,
+                'photo_id' => $photo_id
+            ]);
+            
+            echo json_encode(['success' => true]);
+        } else {
+            error_log("Failed to delete comment: " . mysqli_stmt_error($stmt));
+            mysqli_stmt_close($stmt);
+            echo json_encode(['success' => false, 'error' => 'Failed to delete comment']);
         }
         break;
         

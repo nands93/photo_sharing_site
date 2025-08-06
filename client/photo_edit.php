@@ -24,25 +24,30 @@ include 'includes/header.php';
             <div class="card shadow custom-card h-100">
                 <div class="card-body">
                     <h3 class="card-title mb-4">📸 Camagru Studio</h3>
-                    
+                    <!-- Modo de captura -->
+                    <div class="mb-4 text-center">
+                        <div class="btn-group" role="group" aria-label="Modo de captura">
+                            <button type="button" id="mode-webcam-btn" class="btn btn-outline-secondary">Usar Webcam</button>
+                            <button type="button" id="mode-upload-btn" class="btn btn-camagru active">Upload de Arquivo</button>
+                        </div>
+                    </div>
                     <!-- Webcam Container -->
-                    <div id="webcam-container" class="text-center mb-4">
-                        <div class="position-relative d-inline-block">
-                            <video id="webcam" autoplay playsinline width="480" height="360" 
-                                   class="rounded border shadow-sm" style="max-width: 100%; height: auto;"></video>
-                            <canvas id="canvas" width="480" height="360" 
-                                    class="rounded border shadow-sm position-absolute top-0 start-0" 
-                                    style="display:none; max-width: 100%; height: auto;"></canvas>
+                    <div id="webcam-container" class="text-center mb-4 position-relative" style="display: none;">
+                        <video id="webcam" width="480" height="360" autoplay playsinline class="rounded border shadow-sm mx-auto"></video>
+                        <canvas id="canvas" width="480" height="360" style="display: none;"></canvas>
+                        <div id="captured-photo" style="display:none;">
+                            <img id="photo-result" class="img-fluid rounded border shadow-sm mt-3" style="max-width:100%;">
                         </div>
-                        
-                        <div id="captured-photo" style="display:none;" class="mt-3">
-                            <img id="photo-result" width="480" height="360" 
-                                 class="rounded border shadow-sm" style="max-width: 100%; height: auto;">
-                        </div>
+                    </div>
+                    <!-- Upload Container -->
+                    <div id="upload-container" class="text-center mb-4" style="display: block;">
+                        <input type="file" id="upload-input" accept="image/*" class="form-control mb-3" style="max-width: 300px; margin: 0 auto;">
+                        <img id="upload-preview" style="display:none; max-width: 100%; height: auto;" class="rounded border shadow-sm mt-3">
                     </div>
 
                     <!-- Stickers Section -->
-                    <div id="superposable-images" class="mb-4">
+                    <div id="superposable-images" class="mb-4 d-none">
+                        <!-- ...stickers... -->
                         <h5 class="mb-3">✨ Stickers & Effects</h5>
                         <div class="d-flex flex-wrap gap-2 justify-content-center">
                             <div class="sticker-container">
@@ -64,9 +69,13 @@ include 'includes/header.php';
                     </div>
 
                     <!-- Action Buttons -->
+                    <!-- Action Buttons -->
                     <div class="text-center">
-                        <button id="capture-btn" class="btn btn-camagru btn-lg me-2">
+                        <button id="capture-btn" class="btn btn-camagru btn-lg me-2 d-none">
                             📷 Capture Photo
+                        </button>
+                        <button id="post-upload-btn" class="btn btn-success btn-lg d-none">
+                            📤 Post Photo
                         </button>
                         <button id="save-btn" class="btn btn-success btn-lg" style="display:none;">
                             💾 Save Photo

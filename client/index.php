@@ -51,57 +51,45 @@
             <?php echo $message; ?>
         </div>
     <?php endif; ?>
-    
     <!-- Welcome Section -->
+    <?php if (!$is_logged_in): ?>
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
             <div class="card shadow custom-card text-center">
                 <div class="card-body">
-                    <?php if ($is_logged_in): ?>
-                        <h2 class="card-title mb-3">Bem-vindo, <?php echo sanitize_input($_SESSION['username']); ?>!</h2>
-                        <p class="card-text mb-3">Ready to create amazing photos with stickers?</p>
-                        <a href="photo_edit.php" class="btn btn-camagru btn-lg">Enter Studio</a>
-                    <?php else: ?>
-                        <h2 class="card-title mb-3">Bem-vindo ao Camagru</h2>
-                        <p class="card-text mb-3">Discover amazing photos created by our community!</p>
-                        <a href="signup.php" class="btn btn-camagru btn-lg me-2">Sign Up</a>
-                        <a href="login.php" class="btn btn-outline-secondary btn-lg">Login</a>
-                    <?php endif; ?>
+                    <h2 class="card-title mb-3">Bem-vindo ao Camagru</h2>
+                    <p class="card-text mb-3">Discover amazing photos created by our community!</p>
+                    <a href="signup.php" class="btn btn-camagru btn-lg me-2">Sign Up</a>
+                    <a href="login.php" class="btn btn-outline-secondary btn-lg">Login</a>
                 </div>
             </div>
         </div>
     </div>
-    
+    <?php endif; ?>
     <!-- Photos Gallery -->
     <div class="row">
         <div class="col-12">
-            <h3 class="mb-4">📸 Community Gallery</h3>
-            
             <?php if (mysqli_num_rows($photos_result) > 0): ?>
-                <div class="row g-4">
+                <div>
                     <?php while ($photo = mysqli_fetch_assoc($photos_result)): ?>
-                        <div class="col-lg-4 col-md-6">
-                            <div class="card shadow custom-card h-100">
-                                <div class="position-relative">
-                                    <img src="<?php echo htmlspecialchars($photo['file_path']); ?>" 
-                                         class="card-img-top" 
-                                         style="height: 300px; object-fit: cover;"
-                                         alt="Photo by <?php echo htmlspecialchars($photo['username']); ?>">
-                                    
-                                    <!-- Photo overlay with username -->
-                                    <div class="position-absolute top-0 start-0 end-0 p-3">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <span class="badge bg-dark bg-opacity-75 fs-6">
-                                                👤 <?php echo htmlspecialchars($photo['username']); ?>
-                                            </span>
-                                            <span class="badge bg-dark bg-opacity-75 fs-6">
-                                                📅 <?php echo date('M j', strtotime($photo['created_at'])); ?>
-                                            </span>
-                                        </div>
+                        <div class="card shadow custom-card mb-4" style="max-width: 600px; margin: 0 auto; padding: 0;">
+                            <div class="position-relative" style="padding: 0;">
+                                <img src="<?php echo htmlspecialchars($photo['file_path']); ?>" 
+                                    class="card-img-top"
+                                    style="width: 100%; height: auto; display: block;"
+                                    alt="Photo by <?php echo htmlspecialchars($photo['username']); ?>">
+                                <div class="position-absolute top-0 start-0 end-0 p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <span class="badge bg-dark bg-opacity-75 fs-6">
+                                            👤 <?php echo htmlspecialchars($photo['username']); ?>
+                                        </span>
+                                        <span class="badge bg-dark bg-opacity-75 fs-6">
+                                            📅 <?php echo date('M j', strtotime($photo['created_at'])); ?>
+                                        </span>
                                     </div>
                                 </div>
-                                
-                                <?php if ($is_logged_in): ?>
+                            </div>
+                            <?php if ($is_logged_in): ?>
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="d-flex align-items-center">
@@ -152,9 +140,8 @@
                                 </div>
                                 <?php endif; ?>
                             </div>
-                        </div>
-                    <?php endwhile; ?>
-                </div>
+                        <?php endwhile; ?>
+                    </div>
                 
                 <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>

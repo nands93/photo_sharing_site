@@ -6,20 +6,183 @@ let selectedStickerIndex = null;
 let isCapturing = false;
 let animationId = null;
 let selectedPhotoId = null;
+let webcamInitialized = false;
 
 const video = document.getElementById('webcam');
 const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+//const ctx = canvas.getContext('2d');
+const webcamContainer = document.getElementById('webcam-container');
+const uploadContainer = document.getElementById('upload-container');
+const modeWebcamBtn = document.getElementById('mode-webcam-btn');
+const modeUploadBtn = document.getElementById('mode-upload-btn');
+const uploadInput = document.getElementById('upload-input');
+const uploadPreview = document.getElementById('upload-preview');
+const stickersSection = document.getElementById('superposable-images');
+const captureBtn = document.getElementById('capture-btn');
+const postUploadBtn = document.getElementById('post-upload-btn');
 
-// Inicializa webcam
-navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => { 
-        video.srcObject = stream;
-        video.onloadedmetadata = () => {
-            startVideoOverlay();
-        };
+postUploadBtn.onclick = function() {
+    const file = uploadInput.files[0];
+    if (!file) {
+        alert('Please select an image to upload.');
+        return;
+    }
+    const formData = new FormData();
+    formData.append('image_file', file);
+    formData.append('make_public', '1'); 
+
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+
+    fetch('save_image.php', {
+        method: 'POST',
+        body: formData // Send as FormData
     })
-    .catch(err => { alert('Could not access webcam'); });
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.photo) {
+            alert('Photo uploaded and saved successfully!');
+            addPhotoToGallery(data.photo);
+            
+            // Reset the upload form
+            uploadInput.value = '';
+            uploadPreview.style.display = 'none';
+            postUploadBtn.classList.add('d-none');
+
+        } else {
+            alert('Error saving photo: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        alert('An error occurred during the upload.');
+    })
+    .finally(() => {
+        // Restore button
+        this.disabled = false;
+        this.innerHTML = '📤 Post Photo';
+    });
+};
+
+modeWebcamBtn.onclick = function() {
+    modeWebcamBtn.classList.add('active');
+    modeWebcamBtn.classList.remove('btn-outline-secondary');
+    modeWebcamBtn.classList.add('btn-camagru');
+    modeUploadBtn.classList.remove('active');
+    modeUploadBtn.classList.add('btn-outline-secondary');
+    modeUploadBtn.classList.remove('btn-camagru');
+    webcamContainer.style.display = 'block';
+    uploadContainer.style.display = 'none';
+    stickersSection.classList.remove('d-none');
+    captureBtn.classList.remove('d-none');
+    postUploadBtn.classList.add('d-none');
+    
+    // Só inicializar webcam se ainda não foi inicializada
+    if (!webcamInitialized) {
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => { 
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                   if (!canvas.ctx) {
+                        canvas.ctx = canvas.getContext('2d');
+                    }
+                    startVideoOverlay();
+                };
+                webcamInitialized = true;
+            })
+            .catch(err => { 
+                alert('Could not access webcam: ' + err.message);
+                // Voltar para modo upload se não conseguir acessar webcam
+                modeUploadBtn.click();
+            });
+    } else {
+        // Se já foi inicializada, apenas reativar o overlay
+        startVideoOverlay();
+    }
+};
+
+modeUploadBtn.onclick = function() {
+    modeUploadBtn.classList.add('active');
+    modeUploadBtn.classList.remove('btn-outline-secondary');
+    modeUploadBtn.classList.add('btn-camagru');
+    modeWebcamBtn.classList.remove('active');
+    modeWebcamBtn.classList.add('btn-outline-secondary');
+    modeWebcamBtn.classList.remove('btn-camagru');
+    webcamContainer.style.display = 'none';
+    uploadContainer.style.display = 'block';
+    stickersSection.classList.add('d-none');
+    captureBtn.classList.add('d-none');
+    postUploadBtn.classList.remove('d-none');
+    
+    // Parar animation frame se estiver rodando
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+    }
+
+    // Opcional: parar stream da webcam para economizar recursos
+    // (comentado para manter a webcam "pronta" caso usuário volte)
+    /*
+    if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+        webcamInitialized = false;
+    }
+    */
+};
+
+function addPhotoToGallery(photo) {
+    const thumbnailsContainer = document.getElementById('thumbnails');
+    
+    // Remove the "No photos yet" message if it exists
+    const noPhotosMessage = thumbnailsContainer.querySelector('.text-center');
+    if (noPhotosMessage) {
+        noPhotosMessage.parentElement.remove();
+    }
+
+    const statusBadge = photo.is_public ? 
+        '<span class="badge bg-success position-absolute top-0 end-0 m-1" style="font-size: 0.7em;">Public</span>' : 
+        '<span class="badge bg-secondary position-absolute top-0 end-0 m-1" style="font-size: 0.7em;">Private</span>';
+
+    const newPhotoHTML = `
+        <div class="col-6">
+            <div class="position-relative">
+                <img src="${photo.file_path}" 
+                     alt="${photo.filename}" 
+                     class="img-fluid rounded gallery-image" 
+                     style="height: 120px; width: 100%; object-fit: cover; cursor: pointer; transition: all 0.3s;"
+                     data-photo-id="${photo.id}"
+                     data-is-public="${photo.is_public}"
+                     data-was-posted="${photo.was_posted || 0}"
+                     title="Click to select">
+                ${statusBadge}
+                <div class="gallery-overlay position-absolute top-0 start-0 w-100 h-100 rounded d-flex align-items-center justify-content-center" 
+                     style="background: rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.3s;">
+                    <span class="text-white">🖱️ Select</span>
+                </div>
+            </div>
+        </div>`;
+
+    thumbnailsContainer.insertAdjacentHTML('afterbegin', newPhotoHTML);
+}
+
+uploadInput.onchange = function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            uploadPreview.src = ev.target.result;
+            uploadPreview.style.display = 'block';
+            uploadPreview.classList.add('mx-auto'); // Center the image
+            postUploadBtn.classList.remove('d-none'); // Show the post button
+            // Aqui você pode adicionar lógica para permitir stickers sobre a imagem de upload
+        };
+        reader.readAsDataURL(file);
+    } else {
+        uploadPreview.style.display = 'none';
+        postUploadBtn.classList.add('d-none'); // Hide button if no file is selected
+    }
+};
 
 // Adiciona sticker ao clicar na miniatura
 document.querySelectorAll('.sticker-thumb').forEach(img => {
@@ -44,39 +207,65 @@ document.querySelectorAll('.sticker-thumb').forEach(img => {
 
 // Canvas overlay para stickers
 function startVideoOverlay() {
+    // Garantir que o canvas tenha o contexto
+    if (!canvas.ctx) {
+        canvas.ctx = canvas.getContext('2d');
+    }
+    
+    const ctx = canvas.ctx;
+    
+    // Aguardar o vídeo estar carregado
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+        setTimeout(startVideoOverlay, 100);
+        return;
+    }
+    
+    // Posicionar o canvas sobre o vídeo
     canvas.style.position = 'absolute';
-    canvas.style.top = video.offsetTop + 'px';
+    canvas.style.top = '0';
     canvas.style.left = video.offsetLeft + 'px';
     canvas.style.display = 'block';
     canvas.style.pointerEvents = 'auto';
+    canvas.style.zIndex = '10';
+    canvas.style.width = video.offsetWidth + 'px';
+    canvas.style.height = video.offsetHeight + 'px';
+    
+    // Definir dimensões reais do canvas
+    canvas.width = video.videoWidth || 480;
+    canvas.height = video.videoHeight || 360;
     
     function drawOverlay() {
         if (!isCapturing) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             stickers.forEach((sticker, i) => {
-                ctx.globalAlpha = 1;
-                ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
-                
-                if (i === selectedStickerIndex) {
-                    ctx.strokeStyle = '#007bff';
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
+                if (sticker.img && sticker.img.complete) {
+                    ctx.globalAlpha = 1;
+                    ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
                     
-                    const deleteX = sticker.x + sticker.width - 10;
-                    const deleteY = sticker.y - 10;
-                    ctx.fillStyle = '#ff0000';
-                    ctx.fillRect(deleteX, deleteY, 20, 20);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.font = '14px Arial';
-                    ctx.fillText('×', deleteX + 6, deleteY + 14);
-                    
-                    const resizeX = sticker.x + sticker.width - 10;
-                    const resizeY = sticker.y + sticker.height - 10;
-                    ctx.fillStyle = '#007bff';
-                    ctx.fillRect(resizeX, resizeY, 20, 20);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText('⟲', resizeX + 4, resizeY + 14);
+                    if (i === selectedStickerIndex) {
+                        // Borda de seleção
+                        ctx.strokeStyle = '#007bff';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
+                        
+                        // Botão de deletar
+                        const deleteX = sticker.x + sticker.width - 10;
+                        const deleteY = sticker.y - 10;
+                        ctx.fillStyle = '#ff0000';
+                        ctx.fillRect(deleteX, deleteY, 20, 20);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '14px Arial';
+                        ctx.fillText('×', deleteX + 6, deleteY + 14);
+                        
+                        // Botão de redimensionar
+                        const resizeX = sticker.x + sticker.width - 10;
+                        const resizeY = sticker.y + sticker.height - 10;
+                        ctx.fillStyle = '#007bff';
+                        ctx.fillRect(resizeX, resizeY, 20, 20);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fillText('⟲', resizeX + 4, resizeY + 14);
+                    }
                 }
             });
             
@@ -84,6 +273,28 @@ function startVideoOverlay() {
         }
     }
     drawOverlay();
+}
+
+function resetCapture() {
+    isCapturing = false;
+    stickers = [];
+    selectedStickerIndex = null;
+    
+    video.style.display = 'block';
+    document.getElementById('captured-photo').style.display = 'none';
+    document.getElementById('save-btn').style.display = 'none';
+    
+    // Esconder o canvas para não interferir no posicionamento
+    canvas.style.display = 'none';
+    captureBtn.textContent = '📷 Capture Photo';
+    captureBtn.onclick = handleCapturePhoto;
+    
+    // Reiniciar o overlay apenas se estamos no modo webcam
+    if (webcamContainer.style.display !== 'none') {
+        setTimeout(() => {
+            startVideoOverlay();
+        }, 100);
+    }
 }
 
 function safeRedirect(url) {
@@ -120,8 +331,10 @@ canvas.addEventListener('mousedown', function(e) {
     if (isCapturing) return;
     
     const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
     
     selectedStickerIndex = null;
     draggingSticker = null;
@@ -157,8 +370,10 @@ canvas.addEventListener('mousedown', function(e) {
 canvas.addEventListener('mousemove', function(e) {
     if (!isCapturing) {
         const rect = canvas.getBoundingClientRect();
-        const mx = e.clientX - rect.left;
-        const my = e.clientY - rect.top;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const mx = (e.clientX - rect.left) * scaleX;
+        const my = (e.clientY - rect.top) * scaleY;
         
         if (draggingSticker) {
             draggingSticker.x = mx - offsetX;
@@ -188,6 +403,17 @@ window.addEventListener('keydown', function(e) {
 
 // Capturar foto
 function handleCapturePhoto() {
+    // Verificar se estamos no modo webcam
+    if (webcamContainer.style.display === 'none') {
+        alert('Please switch to webcam mode to capture photos.');
+        return;
+    }
+    
+    if (!webcamInitialized || !video.srcObject) {
+        alert('Webcam is not ready. Please try again.');
+        return;
+    }
+    
     isCapturing = true;
     
     if (animationId) {
@@ -198,8 +424,8 @@ function handleCapturePhoto() {
     canvas.style.display = 'none';
     
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = 480;
-    tempCanvas.height = 360;
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
     const tempCtx = tempCanvas.getContext('2d');
     
     tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
@@ -211,36 +437,24 @@ function handleCapturePhoto() {
     photoResult.src = tempCanvas.toDataURL('image/png');
     document.getElementById('captured-photo').style.display = 'block';
     
-    canvas.width = 480;
-    canvas.height = 360;
-    ctx.drawImage(tempCanvas, 0, 0);
+    // Configurar o canvas principal com a imagem capturada
+    canvas.width = tempCanvas.width;
+    canvas.height = tempCanvas.height;
+    const mainCtx = canvas.getContext('2d');
+    mainCtx.drawImage(tempCanvas, 0, 0);
     
+    // Mostrar botões
     document.getElementById('save-btn').style.display = 'inline-block';
     const captureBtn = document.getElementById('capture-btn');
     captureBtn.textContent = 'Nova Foto';
     captureBtn.onclick = resetCapture;
 }
 
-function resetCapture() {
-    isCapturing = false;
-    stickers = [];
-    selectedStickerIndex = null;
-    
-    video.style.display = 'block';
-    document.getElementById('captured-photo').style.display = 'none';
-    document.getElementById('save-btn').style.display = 'none';
-    
-    const captureBtn = document.getElementById('capture-btn');
-    captureBtn.textContent = 'Capture Photo';
-    captureBtn.onclick = handleCapturePhoto;
-    
-    startVideoOverlay();
-}
-
 document.getElementById('capture-btn').onclick = handleCapturePhoto;
 
 // Salvar imagem
 document.getElementById('save-btn').onclick = function() {
+    const mainCtx = canvas.getContext('2d');
     const dataURL = canvas.toDataURL('image/png');
     console.log('Sending image data, length:', dataURL.length);
     
@@ -374,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Gallery image selection
     const galleryImages = document.querySelectorAll('.gallery-image');
+    const thumbnailsContainer = document.getElementById('thumbnails');
     const selectedPreview = document.getElementById('selected-photo-preview');
     const selectedPreviewImg = document.getElementById('selected-preview-img');
     const postPhotoBtn = document.getElementById('post-photo-btn');
@@ -388,6 +603,11 @@ document.addEventListener('DOMContentLoaded', function() {
         deletePhotoBtn: !!deletePhotoBtn,
         cancelSelectionBtn: !!cancelSelectionBtn
     });
+
+    if (!thumbnailsContainer) {
+        console.log('Thumbnails container not found');
+        return;
+    }
 
     if (galleryImages.length === 0) {
         console.log('No gallery images found');
@@ -438,7 +658,19 @@ document.addEventListener('DOMContentLoaded', function() {
             overlay.style.cursor = 'pointer';
             overlay.style.pointerEvents = 'auto';
         }
-    }); // <-- closes galleryImages.forEach
+    }); // <-- closes galleryImages.
+    
+    thumbnailsContainer.addEventListener('click', function(e) {
+        // Find the container of the clicked photo
+        const photoContainer = e.target.closest('.position-relative');
+        if (photoContainer) {
+            const galleryImage = photoContainer.querySelector('.gallery-image');
+            if (galleryImage) {
+                e.preventDefault();
+                selectPhoto(galleryImage.dataset.photoId, galleryImage);
+            }
+        }
+    });
 
     // Cancel selection
     if (cancelSelectionBtn) {
