@@ -23,7 +23,7 @@ include 'includes/header.php';
         <div class="col-lg-8">
             <div class="card shadow custom-card h-100">
                 <div class="card-body">
-                    <h3 class="card-title mb-4">📸 Camagru Studio</h3>
+                    <h3 class="card-title mb-4">Studio</h3>
                     <!-- Modo de captura -->
                     <div class="mb-4 text-center">
                         <div class="btn-group" role="group" aria-label="Modo de captura">
@@ -48,7 +48,6 @@ include 'includes/header.php';
                     <!-- Stickers Section -->
                     <div id="superposable-images" class="mb-4 d-none">
                         <!-- ...stickers... -->
-                        <h5 class="mb-3">✨ Stickers & Effects</h5>
                         <div class="d-flex flex-wrap gap-2 justify-content-center">
                             <div class="sticker-container">
                                 <img src="images/stickers/hat.png" alt="Hat" class="sticker-thumb btn btn-outline-secondary p-2" 
@@ -89,7 +88,7 @@ include 'includes/header.php';
         <div class="col-lg-4">
             <div class="card shadow custom-card h-100">
                 <div class="card-body">
-                    <h5 class="card-title mb-4">🖼️ My Gallery</h5>
+                    <h5 class="card-title mb-4">Gallery</h5>
                     
                     <div id="thumbnails" class="row g-2" style="max-height: 60vh; overflow-y: auto;">
                         <?php
