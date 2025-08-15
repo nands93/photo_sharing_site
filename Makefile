@@ -1,29 +1,26 @@
-name=Camagru
+NAME=camagru
 
-all:
-	@printf "Launch development configuration ${name}...\n";
-	@docker compose --env-file .env -f docker-compose.yml up -d
-	
-re:
-	@printf "Rebuild development configuration ${name}...\n"
-	@docker compose --env-file .env -f docker-compose.yml down
-	@docker compose --env-file .env -f docker-compose.yml up -d --build
+.PHONY: up down re clean fclean
+
+up:
+	@printf "🚀 Launching ${NAME}...\n"
+	@docker compose up -d --build
 
 down:
-	@printf "Stopping configuration ${name}...\n"
-	@docker compose -f docker-compose.yml down || true
+	@printf "🛑 Stopping ${NAME}...\n"
+	@docker compose down -v || true
+
+re:
+	@printf "♻️ Rebuilding ${NAME}...\n"
+	@$(MAKE) down
+	@$(MAKE) up
 
 clean: down
-	@printf "Cleaning configuration ${name}...\n"
-	@docker system prune -a
+	@printf "🧹 Cleaning up docker system...\n"
+	@docker system prune -a -f
 
 fclean:
-	@printf "Total clean of all configurations docker\n"
-	@docker ps -qa | xargs -r docker stop
-	@docker system prune --all --force
-	@docker network prune --force
-	@rm -rf /var/www/django/staticfiles
-	@rm -rf /var/www/django/media
-	@docker compose -f docker-compose.yml down --remove-orphans || true
-
-.PHONY: all dev prod re-dev re-prod down clean fclean
+	@printf "☢️  Nuking all docker configurations...\n"
+	@docker stop $$(docker ps -qa) || true
+	@docker system prune --all --volumes --force
+	@$(MAKE) down --remove-orphans
