@@ -125,6 +125,6 @@ SENDGRID_API_KEY=your_sendgrid_api_key
 
 ## 📄 Architecture
 
-See [ARCHITETURE.md](ARCHITETURE.md) for container topology, request flow, data model, and security notes.
+See [ARCHITETURE.md](docs/ARCHITECTURE.md) for container topology, request flow, data model, and security notes.
 
 ---
