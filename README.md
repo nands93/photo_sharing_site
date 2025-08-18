@@ -1,5 +1,3 @@
-# Gerar o conteúdo do README.md com base em tudo que foi discutido
-
 # 📸 Camagru
 
 Camagru é uma aplicação web fullstack inspirada em redes sociais de compartilhamento de imagens. O objetivo é permitir que usuários capturem fotos com a webcam ou façam upload de imagens, adicionem sobreposições (stickers), editem e publiquem suas criações para que outros usuários possam visualizar, curtir e comentar.
