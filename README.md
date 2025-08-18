@@ -116,11 +116,6 @@ SENDGRID_API_KEY=your_sendgrid_api_key
 - Email notification preference UI refinements
 - Robust pagination in the gallery
 
-## 🔲 Next
-- Webcam preview and capture
-- Minimum 5 items per page pagination and/or infinite scroll
-- Responsive layout polish and cross‑browser checks
-
 ---
 
 ## 📄 Architecture
