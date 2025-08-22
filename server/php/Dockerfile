@@ -14,6 +14,7 @@ RUN apk update && apk add --no-cache \
     curl \
     git \
     unzip \
+    su-exec \
     && rm -rf /var/cache/apk/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -52,7 +53,6 @@ RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     sed -i '/^user = /d; /^group = /d' /usr/local/etc/php-fpm.d/www.conf
 
 COPY client/composer.json client/composer.lock* ./
-
 RUN if [ -f composer.json ]; then \
         composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
     fi
@@ -90,8 +90,11 @@ RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
+COPY server/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 9000
 
-USER www
-
+USER root
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["php-fpm", "--nodaemonize", "--fpm-config", "/usr/local/etc/php-fpm.conf"]
