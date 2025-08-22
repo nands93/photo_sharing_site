@@ -41,8 +41,6 @@ RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini && \
     echo "allow_url_include = Off" >> /usr/local/etc/php/conf.d/security.ini
 
 RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
-    echo "user = www" >> /usr/local/etc/php-fpm.d/security.conf && \
-    echo "group = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.owner = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.group = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/security.conf && \
@@ -76,7 +74,7 @@ RUN rm -f /var/www/client/.git* 2>/dev/null || true
 
 RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
     find /var/www/client -type d -exec chmod 755 {} \; && \
-    chmod 600 /var/www/client/.env
+    # chmod 600 /var/www/client/.env
 
 RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
     echo 'SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000' >> /usr/local/bin/healthcheck.sh && \
