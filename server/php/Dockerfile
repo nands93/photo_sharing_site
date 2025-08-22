@@ -51,6 +51,12 @@ RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf && \
     sed -i '/^user = /d; /^group = /d' /usr/local/etc/php-fpm.d/www.conf
 
+COPY client/composer.json client/composer.lock* ./
+
+RUN if [ -f composer.json ]; then \
+        composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
+    fi
+
 COPY client/ .
 COPY .env .env
 
@@ -58,8 +64,6 @@ RUN chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client
 
 USER www
-RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
-
 USER root
 
 RUN mkdir -p /var/www/client/uploads /var/log && \
@@ -68,10 +72,7 @@ RUN mkdir -p /var/www/client/uploads /var/log && \
     chmod -R 775 /var/www/client/uploads && \
     chown www:www /var/log/php_errors.log 2>/dev/null || touch /var/log/php_errors.log && chown www:www /var/log/php_errors.log
 
-RUN rm -f /var/www/client/.env.example \
-    /var/www/client/composer.lock \
-    /var/www/client/README.md \
-    /var/www/client/.git* 2>/dev/null || true
+RUN rm -f /var/www/client/.git* 2>/dev/null || true
 
 RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
     find /var/www/client -type d -exec chmod 755 {} \; && \
