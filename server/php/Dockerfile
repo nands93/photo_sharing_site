@@ -41,8 +41,6 @@ RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini && \
     echo "allow_url_include = Off" >> /usr/local/etc/php/conf.d/security.ini
 
 RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
-    echo "listen.owner = www" >> /usr/local/etc/php-fpm.d/security.conf && \
-    echo "listen.group = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_children = 20" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.start_servers = 2" >> /usr/local/etc/php-fpm.d/security.conf && \
@@ -50,15 +48,12 @@ RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_spare_servers = 3" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf
 
-# Copy files first as root
 COPY client/ .
 COPY .env .env
 
-# Set ownership and permissions
 RUN chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client
 
-# Install composer dependencies as www user with proper permissions
 USER www
 RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
 
