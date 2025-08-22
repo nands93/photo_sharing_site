@@ -127,7 +127,3 @@ Note: Exact schema is created in [init.sql](init.sql).
 - Performance and caching
   - HTTP caching (ETag/Last‑Modified) for static assets and thumbnails
   - Gzip/Brotli at NGINX, keep‑alive tuning
-
-- SEO and meta
-  - Open Graph/Twitter cards, sitemap.xml, robots.txt
-  - Canonical URLs and pagination rel links
