@@ -14,6 +14,7 @@ RUN apk update && apk add --no-cache \
     curl \
     git \
     unzip \
+    fcgi \
     && rm -rf /var/cache/apk/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -72,7 +73,7 @@ RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
     # chmod 600 /var/www/client/.env
 
 RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
-    echo 'SCRIPT_NAME=/ping SCRIPT_FILENAME=/ping REQUEST_METHOD=GET cgi-fcgi -bind -connect 127.0.0.1:9000' >> /usr/local/bin/healthcheck.sh && \
+    echo 'cgi-fcgi -bind -connect 127.0.0.1:9000' >> /usr/local/bin/healthcheck.sh && \
     chmod +x /usr/local/bin/healthcheck.sh
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
