@@ -60,6 +60,11 @@ RUN if [ -f composer.json ]; then \
 COPY client/ .
 COPY .env .env
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
+RUN if [ -f composer.json ]; then \
+        composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction; \
+    fi
+
 RUN chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client
 
