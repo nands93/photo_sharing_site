@@ -14,7 +14,6 @@ RUN apk update && apk add --no-cache \
     curl \
     git \
     unzip \
-    su-exec \
     && rm -rf /var/cache/apk/*
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -42,6 +41,8 @@ RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini && \
     echo "allow_url_include = Off" >> /usr/local/etc/php/conf.d/security.ini
 
 RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
+    echo "user = www" >> /usr/local/etc/php-fpm.d/security.conf && \
+    echo "group = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.owner = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.group = www" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/security.conf && \
@@ -49,26 +50,20 @@ RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.start_servers = 2" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.min_spare_servers = 1" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_spare_servers = 3" >> /usr/local/etc/php-fpm.d/security.conf && \
-    echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf && \
-    sed -i '/^user = /d; /^group = /d' /usr/local/etc/php-fpm.d/www.conf
+    echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf
 
-COPY client/composer.json client/composer.lock* ./
-RUN if [ -f composer.json ]; then \
-        composer install --no-dev --optimize-autoloader --no-interaction --no-scripts; \
-    fi
-
+# Copy files first as root
 COPY client/ .
 COPY .env .env
 
-ENV COMPOSER_ALLOW_SUPERUSER=1
-RUN if [ -f composer.json ]; then \
-        composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction; \
-    fi
-
+# Set ownership and permissions
 RUN chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client
 
+# Install composer dependencies as www user with proper permissions
 USER www
+RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
+
 USER root
 
 RUN mkdir -p /var/www/client/uploads /var/log && \
@@ -90,11 +85,8 @@ RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
-COPY server/php/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
 EXPOSE 9000
 
-USER root
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+USER www
+
 CMD ["php-fpm", "--nodaemonize", "--fpm-config", "/usr/local/etc/php-fpm.conf"]
