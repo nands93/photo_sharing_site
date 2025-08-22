@@ -13,4 +13,4 @@ if [ -f composer.json ]; then
   fi
 fi
 
-exec su-exec www:www "$@"
+exec "$@"
