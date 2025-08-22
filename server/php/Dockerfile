@@ -73,7 +73,7 @@ RUN mkdir -p /var/www/client/uploads /var/log && \
 RUN rm -f /var/www/client/.git* 2>/dev/null || true
 
 RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
-    find /var/www/client -type d -exec chmod 755 {} \; && \
+    find /var/www/client -type d -exec chmod 755 {} \;
     # chmod 600 /var/www/client/.env
 
 RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
