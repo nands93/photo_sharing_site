@@ -17,7 +17,6 @@ if (!isset($page_name)) {
 
 if (!isset($csrf_token)) {
     if (isset($_SESSION['user_id'])) {
-        // Para usuários logados, usar um token persistente durante a sessão
         if (!isset($_SESSION['current_csrf_token']) || 
             !isset($_SESSION['csrf_tokens'][$_SESSION['current_csrf_token']]) ||
             (time() - $_SESSION['csrf_tokens'][$_SESSION['current_csrf_token']]) > 3000) {
@@ -28,7 +27,6 @@ if (!isset($csrf_token)) {
             $csrf_token = $_SESSION['current_csrf_token'];
         }
     } else {
-        // Para usuários não logados, gerar token único por página se não existir
         $csrf_token = generate_csrf_token();
     }
 }
