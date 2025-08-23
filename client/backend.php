@@ -106,8 +106,7 @@
             return false;
         }
         
-        // Token de uso único
-        // unset($_SESSION['csrf_tokens'][$token]);
+        // Consider if this token cleanup is affecting other session data
         return true;
     }
 
@@ -133,16 +132,17 @@
         return $exists; // true if exists, false if not
     }
 
-    function check_rate_limit($action, $max_attempts = 5, $time_window = 300) {
+    function check_rate_limit($action, $max_attempts, $time_window) {
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-        $key = $action . '_attempts_' . hash('sha256', $ip);
-        $time_key = $action . '_last_attempt_' . hash('sha256', $ip);
+        $key = $action . '_attempts_' . $ip;
+        $time_key = $action . '_time_' . $ip;
         
         if (!isset($_SESSION[$key])) {
             $_SESSION[$key] = 0;
             $_SESSION[$time_key] = time();
         }
         
+        // Check if time window has passed
         if (time() - $_SESSION[$time_key] > $time_window) {
             $_SESSION[$key] = 0;
             $_SESSION[$time_key] = time();
@@ -151,12 +151,13 @@
         $_SESSION[$key]++;
         $_SESSION[$time_key] = time();
         
-        // Log tentativas suspeitas
+        // Add more detailed logging
         if ($_SESSION[$key] > $max_attempts) {
-            error_log("Rate limit exceeded for action: $action, IP: $ip, Attempts: " . $_SESSION[$key]);
+            error_log("Rate limit exceeded for action: $action, IP: $ip, Attempts: " . $_SESSION[$key] . ", Window: $time_window seconds");
+            return false;
         }
         
-        return $_SESSION[$key] <= $max_attempts;
+        return true;
     }
 
     function authenticate_user($conn, $username, $password) {
@@ -169,11 +170,16 @@
             mysqli_stmt_close($stmt);
             
             if ($user && password_verify($password, $user['password'])) {
-                // Verificar se o e-mail foi confirmado
+                error_log("Authentication success for user: " . $user['username'] . ", Hash: " . substr($user['password'], 0, 20) . "...");
+                
                 if (!$user['email_verified']) {
                     return ['error' => 'email_not_verified'];
                 }
                 return $user;
+            } else {
+                if ($user) {
+                    error_log("Password verification failed for user: " . $user['username'] . ", Hash starts with: " . substr($user['password'], 0, 20));
+                }
             }
         }
         return false;

@@ -3,8 +3,8 @@ header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
 header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Content-Security-Policy: default-src \'self\'; script-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; style-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; img-src \'self\' data:');
-header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+header('Content-Security-Policy: default-src \'self\'; script-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; style-src \'self\' \'unsafe-inline\' cdn.jsdelivr.net; img-src \'self\' data: blob:; media-src \'self\' blob:');
+header('Permissions-Policy: camera=(self), microphone=(), geolocation=()');
 if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
     header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }
@@ -39,7 +39,11 @@ if (!isset($csrf_token)) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo htmlspecialchars($page_title); ?></title>
+    <title><?php echo isset($page_title) ? htmlspecialchars($page_title) : 'Camagru'; ?></title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon.ico">
+    <link rel="shortcut icon" href="favicon.ico">
     <?php if (isset($_SESSION['user_id'])): ?>
     <meta name="current-user-id" content="<?php echo $_SESSION['user_id']; ?>">
     <?php endif; ?>

@@ -5,12 +5,19 @@
     $page_title = 'Reset Password';
     $page_name = 'Reset Password';
 
-    $message = $message ?? '';
-    $messageType = $messageType ?? '';
+    $message = '';
+    $messageType = '';
 
-    $csrf_token = $_SESSION['csrf_token'] ?? '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (isset($_POST['csrf_token']) && verify_csrf_token($csrf_token)) {
+        $csrf_token = $_POST['csrf_token'] ?? '';
+        
+        if (!verify_csrf_token($csrf_token)) {
+            $message = "Invalid CSRF token.";
+            $messageType = 'error';
+        } elseif (!check_rate_limit('password_reset', 3, 300)) {
+            $message = "Too many password reset attempts. Please try again in 5 minutes.";
+            $messageType = 'error';
+        } else {
             $email = sanitize_input($_POST['email'] ?? '');
             
             if (empty($email)) {
@@ -21,30 +28,42 @@
                 $messageType = 'error';
             } else {
                 $stmt = mysqli_prepare($conn, "SELECT id FROM users WHERE email=? LIMIT 1");
-                mysqli_stmt_bind_param($stmt, "s", $email);
-                mysqli_stmt_execute($stmt);
-                mysqli_stmt_store_result($stmt);
-
-                if (mysqli_stmt_num_rows($stmt) > 0) {
-                    mysqli_stmt_close($stmt);
-                    $reset_password_token = generate_token();
-                    date_default_timezone_set('America/Sao_Paulo');
-                    $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
-                    $stmt = mysqli_prepare($conn, "UPDATE users SET reset_password_token=?, reset_password_expires=? WHERE email=?");
-                    mysqli_stmt_bind_param($stmt, "sss", $reset_password_token, $expires, $email);
+                if ($stmt) {
+                    mysqli_stmt_bind_param($stmt, "s", $email);
                     mysqli_stmt_execute($stmt);
-                    mysqli_stmt_close($stmt);
-                    reset_password_email($email, $reset_password_token);
+                    mysqli_stmt_store_result($stmt);
+
+                    if (mysqli_stmt_num_rows($stmt) > 0) {
+                        $reset_password_token = generate_token();
+                        date_default_timezone_set('America/Sao_Paulo');
+                        $expires = date('Y-m-d H:i:s', strtotime('+24 hours'));
+                        
+                        mysqli_stmt_close($stmt);
+                        
+                        $update_stmt = mysqli_prepare($conn, "UPDATE users SET reset_password_token=?, reset_password_expires=? WHERE email=?");
+                        if ($update_stmt) {
+                            mysqli_stmt_bind_param($update_stmt, "sss", $reset_password_token, $expires, $email);
+                            mysqli_stmt_execute($update_stmt);
+                            mysqli_stmt_close($update_stmt);
+                            
+                            // Send email
+                            reset_password_email($email, $reset_password_token);
+                        } else {
+                            error_log("Failed to prepare update statement: " . mysqli_error($conn));
+                        }
+                    } else {
+                        mysqli_stmt_close($stmt);
+                    }
+                    
+                    // Always show success message to prevent email enumeration
+                    $message = "If the account exists, a password reset link has been sent to your email.";
+                    $messageType = 'success';
                 } else {
-                    mysqli_stmt_close($stmt);
+                    error_log("Failed to prepare select statement: " . mysqli_error($conn));
+                    $message = "An error occurred. Please try again later.";
+                    $messageType = 'error';
                 }
-                $message = "If the account exists, a password reset link has been sent to your email.";
-                $messageType = 'success';
             }
-            } else {
-            $message = "Invalid CSRF token.";
-            $messageType = 'error';
-            mysqli_stmt_close($stmt);
         }
     }
 

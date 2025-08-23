@@ -126,7 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $message = "Current password is required to change password.";
                     $messageType = 'error';
                 } else {
-                    // Verificar senha atual
                     $stmt = mysqli_prepare($conn, "SELECT password FROM users WHERE id = ? LIMIT 1");
                     mysqli_stmt_bind_param($stmt, "i", $user_id);
                     mysqli_stmt_execute($stmt);

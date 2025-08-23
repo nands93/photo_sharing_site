@@ -5,7 +5,6 @@
     $message = '';
     $messageType = '';
 
-    // Definir token CSRF antes de incluir o header
     $csrf_token = '';
 
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -29,49 +28,34 @@
                 $message = "Invalid username. Use 3-30 characters, letters, numbers, and underscores only.";
                 $messageType = 'error';
             } else {
-                $stmt = mysqli_prepare($conn, "SELECT id, username, password, email_verified FROM users WHERE username = ? LIMIT 1");
-                if ($stmt) {
-                    mysqli_stmt_bind_param($stmt, "s", $username);
-                    mysqli_stmt_execute($stmt);
-                    $result = mysqli_stmt_get_result($stmt);
-                    
-                    if ($user = mysqli_fetch_assoc($result)) {
-                        if ($user && password_verify($password, $user['password'])) {
-                            if (!$user['email_verified']) {
-                                $message = "Please, verify your email address before logging in.";
-                                $messageType = 'error';
-                            } else {
-                                $_SESSION['user_id'] = $user['id'];
-                                $_SESSION['username'] = $user['username'];
-
-                                date_default_timezone_set('America/Sao_Paulo');
-                                $now = date('Y-m-d H:i:s');
-                                $update_stmt = mysqli_prepare($conn, "UPDATE users SET last_login=? WHERE id=?");
-                                mysqli_stmt_bind_param($update_stmt, "si", $now, $user['id']);
-                                mysqli_stmt_execute($update_stmt);
-                                mysqli_stmt_close($update_stmt);
-                            
-                                session_regenerate_id(true);
-                                
-                                unset($_SESSION['login_attempts']);
-                                unset($_SESSION['login_last_attempt']);
-                                
-                                header("Location: index.php");
-                                exit();
-                            }
-                        } else {
-                            $message = "Username or password is incorrect.";
-                            $messageType = 'error';
-                        }
-                    } else {
-                        $message = "Username or password is incorrect.";
-                        $messageType = 'error';
-                    }
-                    mysqli_stmt_close($stmt);
-                } else {
-                    error_log("Prepare failed: " . mysqli_error($conn));
-                    $message = "Internal server error. Please try again later.";
+                // Adicione esta linha para chamar a função authenticate_user
+                $auth_result = authenticate_user($conn, $username, $password);
+                
+                if ($auth_result === false) {
+                    $message = "Username or password is incorrect.";
                     $messageType = 'error';
+                } elseif (isset($auth_result['error']) && $auth_result['error'] === 'email_not_verified') {
+                    $message = "Please verify your email before logging in.";
+                    $messageType = 'error';
+                } else {
+                    // Agora $auth_result está definido corretamente
+                    $_SESSION['user_id'] = $auth_result['id'];
+                    $_SESSION['username'] = $auth_result['username'];
+
+                    date_default_timezone_set('America/Sao_Paulo');
+                    $now = date('Y-m-d H:i:s');
+                    $update_stmt = mysqli_prepare($conn, "UPDATE users SET last_login=? WHERE id=?");
+                    mysqli_stmt_bind_param($update_stmt, "si", $now, $auth_result['id']);
+                    mysqli_stmt_execute($update_stmt);
+                    mysqli_stmt_close($update_stmt);
+                
+                    session_regenerate_id(true);
+                    
+                    unset($_SESSION['login_attempts']);
+                    unset($_SESSION['login_last_attempt']);
+                    
+                    header("Location: index.php");
+                    exit();
                 }
             }
         }

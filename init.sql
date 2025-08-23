@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS user_photos (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
-    is_public BOOLEAN DEFAULT FALSE, -- Nova coluna para controlar se está na galeria principal
+    is_public BOOLEAN DEFAULT FALSE,
+    was_posted BOOLEAN DEFAULT FALSE,
     
     KEY idx_user_id (user_id),
     KEY idx_username (username),

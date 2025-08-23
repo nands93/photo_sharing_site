@@ -8,7 +8,7 @@ up:
 
 down:
 	@printf "🛑 Stopping ${NAME}...\n"
-	@docker compose down -v || true
+	@docker compose down || true
 
 re:
 	@printf "♻️ Rebuilding ${NAME}...\n"

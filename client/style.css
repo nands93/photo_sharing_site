@@ -35,17 +35,32 @@ body {
 .nav-link:hover {
     color: #b37e03 !important;
 }
+/* Botão */
+.btn-group .btn {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    user-select: none;
+}
+
+.btn-group .btn:hover {
+    transform: scale(1.02);
+    transition: all 0.2s ease;
+}
+
 .btn-camagru {
-    background: #bfa76a;
-    color: #222;
-    border: none;
-    font-weight: 600;
-    transition: background 0.2s;
+    background-color: #bfa76a !important;
+    border-color: #bfa76a !important;
+    color: white !important;
 }
-.btn-camagru:hover, .btn-camagru:focus {
-    background: #a68d4a;
-    color: #222;
+
+.btn-camagru:hover,
+.btn-camagru:focus,
+.btn-camagru:active {
+    background-color: #a89660 !important;
+    border-color: #a89660 !important;
+    color: white !important;
 }
+
 .link-camagru {
     color: #bfa76a;
     font-weight: 600;
@@ -121,7 +136,7 @@ body {
 }
 
 .gallery-image.selected {
-    border: 3px solid #bfa76a;
+    border: 3px solid #bfa76a !important;
     transform: scale(0.95);
 }
 
