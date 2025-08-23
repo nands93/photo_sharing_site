@@ -119,16 +119,6 @@ modeUploadBtn.onclick = function() {
         cancelAnimationFrame(animationId);
         animationId = null;
     }
-
-    // Opcional: parar stream da webcam para economizar recursos
-    // (comentado para manter a webcam "pronta" caso usuário volte)
-    /*
-    if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-        video.srcObject = null;
-        webcamInitialized = false;
-    }
-    */
 };
 
 function addPhotoToGallery(photo) {
@@ -184,7 +174,6 @@ uploadInput.onchange = function(e) {
     }
 };
 
-// Adiciona sticker ao clicar na miniatura
 document.querySelectorAll('.sticker-thumb').forEach(img => {
     img.onclick = function() {
         if (isCapturing) return;
@@ -205,22 +194,18 @@ document.querySelectorAll('.sticker-thumb').forEach(img => {
     };
 });
 
-// Canvas overlay para stickers
 function startVideoOverlay() {
-    // Garantir que o canvas tenha o contexto
     if (!canvas.ctx) {
         canvas.ctx = canvas.getContext('2d');
     }
     
     const ctx = canvas.ctx;
     
-    // Aguardar o vídeo estar carregado
     if (video.videoWidth === 0 || video.videoHeight === 0) {
         setTimeout(startVideoOverlay, 100);
         return;
     }
     
-    // Posicionar o canvas sobre o vídeo
     canvas.style.position = 'absolute';
     canvas.style.top = '0';
     canvas.style.left = video.offsetLeft + 'px';
@@ -230,7 +215,6 @@ function startVideoOverlay() {
     canvas.style.width = video.offsetWidth + 'px';
     canvas.style.height = video.offsetHeight + 'px';
     
-    // Definir dimensões reais do canvas
     canvas.width = video.videoWidth || 480;
     canvas.height = video.videoHeight || 360;
     
@@ -244,12 +228,10 @@ function startVideoOverlay() {
                     ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
                     
                     if (i === selectedStickerIndex) {
-                        // Borda de seleção
                         ctx.strokeStyle = '#007bff';
                         ctx.lineWidth = 2;
                         ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
                         
-                        // Botão de deletar
                         const deleteX = sticker.x + sticker.width - 10;
                         const deleteY = sticker.y - 10;
                         ctx.fillStyle = '#ff0000';
@@ -284,12 +266,10 @@ function resetCapture() {
     document.getElementById('captured-photo').style.display = 'none';
     document.getElementById('save-btn').style.display = 'none';
     
-    // Esconder o canvas para não interferir no posicionamento
     canvas.style.display = 'none';
     captureBtn.textContent = '📷 Capture Photo';
     captureBtn.onclick = handleCapturePhoto;
     
-    // Reiniciar o overlay apenas se estamos no modo webcam
     if (webcamContainer.style.display !== 'none') {
         setTimeout(() => {
             startVideoOverlay();
@@ -326,7 +306,6 @@ function isClickOnResize(mx, my, sticker) {
     return mx >= resizeX && mx <= resizeX + 20 && my >= resizeY && my <= resizeY + 20;
 }
 
-// Mouse events para stickers
 canvas.addEventListener('mousedown', function(e) {
     if (isCapturing) return;
     
@@ -401,9 +380,7 @@ window.addEventListener('keydown', function(e) {
     }
 });
 
-// Capturar foto
 function handleCapturePhoto() {
-    // Verificar se estamos no modo webcam
     if (webcamContainer.style.display === 'none') {
         alert('Please switch to webcam mode to capture photos.');
         return;
@@ -437,13 +414,11 @@ function handleCapturePhoto() {
     photoResult.src = tempCanvas.toDataURL('image/png');
     document.getElementById('captured-photo').style.display = 'block';
     
-    // Configurar o canvas principal com a imagem capturada
     canvas.width = tempCanvas.width;
     canvas.height = tempCanvas.height;
     const mainCtx = canvas.getContext('2d');
     mainCtx.drawImage(tempCanvas, 0, 0);
     
-    // Mostrar botões
     document.getElementById('save-btn').style.display = 'inline-block';
     const captureBtn = document.getElementById('capture-btn');
     captureBtn.textContent = 'Nova Foto';
@@ -452,7 +427,6 @@ function handleCapturePhoto() {
 
 document.getElementById('capture-btn').onclick = handleCapturePhoto;
 
-// Salvar imagem
 document.getElementById('save-btn').onclick = function() {
     const mainCtx = canvas.getContext('2d');
     const dataURL = canvas.toDataURL('image/png');
@@ -466,7 +440,7 @@ document.getElementById('save-btn').onclick = function() {
     .then(response => {
         console.log('Response status:', response.status);
         console.log('Response headers:', response.headers);
-        return response.text(); // Primeiro pegar como texto para debug
+        return response.text(); 
     })
     .then(responseText => {
         console.log('Raw response:', responseText);
@@ -495,16 +469,13 @@ document.getElementById('save-btn').onclick = function() {
 function selectPhoto(photoId, imgElement) {
     console.log('Selecting photo:', photoId);
     
-    // Remove previous selection
     document.querySelectorAll('.gallery-image').forEach(gi => gi.classList.remove('selected'));
     
-    // Select current image
     imgElement.classList.add('selected');
     selectedPhotoId = photoId;
     
     console.log('Selected photo ID:', selectedPhotoId);
     
-    // Show preview
     const selectedPreview = document.getElementById('selected-photo-preview');
     const selectedPreviewImg = document.getElementById('selected-preview-img');
     
@@ -542,11 +513,9 @@ function deletePhoto(photoId, imgElement) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove o elemento da interface
             const photoContainer = imgElement.closest('.col-6');
             photoContainer.remove();
             
-            // Reset selection if this photo was selected
             if (selectedPhotoId == photoId) {
                 selectedPhotoId = null;
                 const selectedPreview = document.getElementById('selected-photo-preview');
@@ -555,10 +524,8 @@ function deletePhoto(photoId, imgElement) {
                 }
             }
             
-            // Show success message
             alert('Photo deleted successfully!');
             
-            // Check if gallery is now empty
             const remainingPhotos = document.querySelectorAll('.gallery-image');
             if (remainingPhotos.length === 0) {
                 document.getElementById('thumbnails').innerHTML = `
@@ -585,8 +552,7 @@ function deletePhoto(photoId, imgElement) {
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing gallery functionality');
-    
-    // Gallery image selection
+
     const galleryImages = document.querySelectorAll('.gallery-image');
     const thumbnailsContainer = document.getElementById('thumbnails');
     const selectedPreview = document.getElementById('selected-photo-preview');
@@ -620,16 +586,13 @@ document.addEventListener('DOMContentLoaded', function() {
         img.addEventListener('click', function() {
             console.log('Gallery image clicked:', this.dataset.photoId);
             
-            // Remove previous selection
             galleryImages.forEach(gi => gi.classList.remove('selected'));
             
-            // Select current image
             this.classList.add('selected');
             selectedPhotoId = this.dataset.photoId;
             
             console.log('Selected photo ID:', selectedPhotoId);
             
-            // Show preview
             if (selectedPreviewImg && selectedPreview) {
                 selectedPreviewImg.src = this.src;
                 selectedPreview.style.display = 'block';
@@ -637,14 +600,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Hover effects
         img.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             selectPhoto(img.dataset.photoId, this);
         });
         
-        // Click handler no overlay
         const container = img.closest('.position-relative');
         const overlay = container ? container.querySelector('.gallery-overlay') : null;
         if (overlay) {
@@ -654,14 +615,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectPhoto(img.dataset.photoId, img);
             });
             
-            // Tornar o overlay clicável
             overlay.style.cursor = 'pointer';
             overlay.style.pointerEvents = 'auto';
         }
-    }); // <-- closes galleryImages.
+    }); 
     
     thumbnailsContainer.addEventListener('click', function(e) {
-        // Find the container of the clicked photo
         const photoContainer = e.target.closest('.position-relative');
         if (photoContainer) {
             const galleryImage = photoContainer.querySelector('.gallery-image');
@@ -672,7 +631,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Cancel selection
     if (cancelSelectionBtn) {
         cancelSelectionBtn.addEventListener('click', function() {
             console.log('Cancel selection clicked');
@@ -786,7 +744,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.success) {
                     alert(data.new_status ? 'Photo is now PUBLIC!' : 'Photo is now PRIVATE!');
-                    // Opcional: atualizar badge na galeria
                     const selectedImg = document.querySelector(`.gallery-image[data-photo-id="${selectedPhotoId}"]`);
                     if (selectedImg) {
                         const badge = selectedImg.parentElement.querySelector('.badge');
@@ -809,4 +766,4 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-}); // <-- closes DOMContentLoaded event listener
+}); 
