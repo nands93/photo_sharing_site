@@ -169,7 +169,7 @@
             mysqli_stmt_close($stmt);
             
             if ($user && password_verify($password, $user['password'])) {
-                error_log("Authentication success for user: " . $user['username'] . ", Hash: " . substr($user['password'], 0, 20) . "...");
+                error_log("Authentication success for user.");
                 
                 if (!$user['email_verified']) {
                     return ['error' => 'email_not_verified'];
@@ -177,7 +177,7 @@
                 return $user;
             } else {
                 if ($user) {
-                    error_log("Password verification failed for user: " . $user['username'] . ", Hash starts with: " . substr($user['password'], 0, 20));
+                    error_log("Password verification failed.");
                 }
             }
         }

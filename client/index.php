@@ -35,7 +35,6 @@
     mysqli_stmt_execute($stmt);
     $photos_result = mysqli_stmt_get_result($stmt);
     
-    // Contar total de fotos para paginação
     $count_sql = "SELECT COUNT(*) as total FROM user_photos WHERE is_public = 1 AND is_active = 1";
     $count_result = mysqli_query($conn, $count_sql);
     $total_photos = mysqli_fetch_assoc($count_result)['total'];
@@ -51,7 +50,7 @@
             <?php echo $message; ?>
         </div>
     <?php endif; ?>
-    <!-- Welcome Section -->
+
     <?php if (!$is_logged_in): ?>
     <div class="row justify-content-center mb-5">
         <div class="col-lg-8">
@@ -66,7 +65,7 @@
         </div>
     </div>
     <?php endif; ?>
-    <!-- Photos Gallery -->
+
     <div class="row">
         <div class="col-12">
             <?php if (mysqli_num_rows($photos_result) > 0): ?>
@@ -107,13 +106,10 @@
                                         </small>
                                     </div>
                                     
-                                    <!-- Comments Section -->
                                     <div class="comments-section" data-photo-id="<?php echo $photo['id']; ?>">
                                         <div class="comments-list mb-3" style="max-height: 150px; overflow-y: auto;">
-                                            <!-- Comments will be loaded here -->
                                         </div>
                                         
-                                        <!-- Add Comment Form -->
                                         <form class="add-comment-form" data-photo-id="<?php echo $photo['id']; ?>">
                                             <div class="input-group">
                                                 <input type="text" 
@@ -143,7 +139,6 @@
                         <?php endwhile; ?>
                     </div>
                 
-                <!-- Pagination -->
                 <?php if ($total_pages > 1): ?>
                 <nav aria-label="Gallery pagination" class="mt-5">
                     <ul class="pagination justify-content-center">
