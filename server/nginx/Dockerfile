@@ -4,7 +4,9 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 RUN apk update && apk add --no-cache openssl
 
-RUN mkdir -p /etc/nginx/ssl
+RUN mkdir -p /var/log/nginx
+
+COPY server/nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 

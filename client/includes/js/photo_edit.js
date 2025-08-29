@@ -268,40 +268,47 @@ document.addEventListener('DOMContentLoaded', function() {
         const canvas = document.getElementById('canvas');
         const ctx = canvas.ctx;
         
-        
         if (!ctx) return;
         
-        function drawUploadOverlay() {
+        let lastFrameTime = 0;
+        const targetFPS = 30; // Limitar a 30 FPS para reduzir carga
+        const frameInterval = 1000 / targetFPS;
+        
+        function drawUploadOverlay(currentTime) {
             if (modeUploadBtn.classList.contains('active') && uploadPreview.style.display === 'block') {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                stickers.forEach((sticker, i) => {
-                    if (sticker.img && sticker.img.complete) {
-                        ctx.globalAlpha = 1;
-                        ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
-                        
-                        if (i === selectedStickerIndex) {
-                            ctx.strokeStyle = '#007bff';
-                            ctx.lineWidth = 2;
-                            ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
+                if (currentTime - lastFrameTime >= frameInterval) {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    stickers.forEach((sticker, i) => {
+                        if (sticker.img && sticker.img.complete) {
+                            ctx.globalAlpha = 1;
+                            ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
                             
-                            const deleteX = sticker.x + sticker.width - 10;
-                            const deleteY = sticker.y - 10;
-                            ctx.fillStyle = '#ff0000';
-                            ctx.fillRect(deleteX, deleteY, 20, 20);
-                            ctx.fillStyle = '#ffffff';
-                            ctx.font = '14px Arial';
-                            ctx.fillText('×', deleteX + 6, deleteY + 14);
-                            
-                            const resizeX = sticker.x + sticker.width - 10;
-                            const resizeY = sticker.y + sticker.height - 10;
-                            ctx.fillStyle = '#007bff';
-                            ctx.fillRect(resizeX, resizeY, 20, 20);
-                            ctx.fillStyle = '#ffffff';
-                            ctx.fillText('⟲', resizeX + 4, resizeY + 14);
+                            if (i === selectedStickerIndex) {
+                                ctx.strokeStyle = '#007bff';
+                                ctx.lineWidth = 2;
+                                ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
+                                
+                                const deleteX = sticker.x + sticker.width - 10;
+                                const deleteY = sticker.y - 10;
+                                ctx.fillStyle = '#ff0000';
+                                ctx.fillRect(deleteX, deleteY, 20, 20);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.font = '14px Arial';
+                                ctx.fillText('×', deleteX + 6, deleteY + 14);
+                                
+                                const resizeX = sticker.x + sticker.width - 10;
+                                const resizeY = sticker.y + sticker.height - 10;
+                                ctx.fillStyle = '#007bff';
+                                ctx.fillRect(resizeX, resizeY, 20, 20);
+                                ctx.fillStyle = '#ffffff';
+                                ctx.fillText('⟲', resizeX + 4, resizeY + 14);
+                            }
                         }
-                    }
-                });
+                    });
+                    
+                    lastFrameTime = currentTime;
+                }
                 
                 animationId = requestAnimationFrame(drawUploadOverlay);
             }
