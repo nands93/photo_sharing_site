@@ -89,7 +89,7 @@ include 'includes/header.php';
                             📷 Capture Photo
                         </button>
                         <button id="post-upload-btn" class="btn btn-success btn-lg d-none">
-                            📤 Post Photo
+                            📤 Save Photo
                         </button>
                         <button id="save-btn" class="btn btn-success btn-lg" style="display:none;">
                             💾 Save Photo

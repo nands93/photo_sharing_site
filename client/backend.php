@@ -142,20 +142,19 @@
             $_SESSION[$time_key] = time();
         }
         
-        // Check if time window has passed
-        if (time() - $_SESSION[$time_key] > $time_window) {
+        $current_time = time();
+
+        if ($current_time - $_SESSION[$time_key] > $time_window) {
             $_SESSION[$key] = 0;
-            $_SESSION[$time_key] = time();
+            $_SESSION[$time_key] = $current_time;
         }
-        
-        $_SESSION[$key]++;
-        $_SESSION[$time_key] = time();
-        
-        // Add more detailed logging
-        if ($_SESSION[$key] > $max_attempts) {
+
+        if ($_SESSION[$key] >= $max_attempts) {
             error_log("Rate limit exceeded for action: $action, IP: $ip, Attempts: " . $_SESSION[$key] . ", Window: $time_window seconds");
             return false;
         }
+        
+        $_SESSION[$key]++;
         
         return true;
     }
@@ -201,5 +200,29 @@
         ];
         
         error_log("SECURITY: " . json_encode($log_entry));
+    }
+
+    function cleanup_session() {
+        if (isset($_SESSION['csrf_tokens'])) {
+            $now = time();
+            foreach ($_SESSION['csrf_tokens'] as $token => $timestamp) {
+                if (($now - $timestamp) > 3600) {
+                    unset($_SESSION['csrf_tokens'][$token]);
+                }
+            }
+        }
+        
+        $current_time = time();
+        foreach ($_SESSION as $key => $value) {
+            if (preg_match('/_time_/', $key)) {
+                $attempts_key = str_replace('_time_', '_attempts_', $key);
+                if (isset($_SESSION[$key]) && ($current_time - $_SESSION[$key]) > 3600) {
+                    unset($_SESSION[$key]);
+                    if (isset($_SESSION[$attempts_key])) {
+                        unset($_SESSION[$attempts_key]);
+                    }
+                }
+            }
+        }
     }
 ?>

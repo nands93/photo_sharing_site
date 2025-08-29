@@ -95,7 +95,7 @@
                                         <div class="d-flex align-items-center">
                                             <button class="btn btn-link p-0 me-3 like-btn" 
                                                     data-photo-id="<?php echo $photo['id']; ?>">
-                                                <span class="like-icon">❤️</span>
+                                                <span class="like-icon"><?php echo $user_liked ? '❤️' : '🤍'; ?></span>
                                                 <span class="like-count"><?php echo $photo['like_count']; ?></span>
                                             </button>
                                             <span class="text-muted">

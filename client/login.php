@@ -2,6 +2,8 @@
     session_start();
     require_once 'backend.php';
 
+    cleanup_session();
+
     $message = '';
     $messageType = '';
 
@@ -38,7 +40,6 @@
                     $message = "Please verify your email before logging in.";
                     $messageType = 'error';
                 } else {
-                    // Agora $auth_result está definido corretamente
                     $_SESSION['user_id'] = $auth_result['id'];
                     $_SESSION['username'] = $auth_result['username'];
 
@@ -51,6 +52,9 @@
                 
                     session_regenerate_id(true);
                     
+                    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+                    unset($_SESSION['login_attempts_' . $ip]);
+                    unset($_SESSION['login_time_' . $ip]);
                     unset($_SESSION['login_attempts']);
                     unset($_SESSION['login_last_attempt']);
                     

@@ -38,6 +38,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const deletePhotoBtn = document.getElementById('delete-photo-btn');
     const togglePublicBtn = document.getElementById('toggle-public-btn');
     const selectedPreview = document.getElementById('selected-photo-preview');
+    const uploadPreviewContainer = document.querySelector('.upload-preview-container');
+
+    function attachCanvasToUpload() {
+        if (canvas && uploadPreviewContainer && canvas.parentElement !== uploadPreviewContainer) {
+            uploadPreviewContainer.appendChild(canvas);
+        }
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '10';
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.borderRadius = '0.375rem';
+        canvas.style.display = 'block';
+    }
+
+    function attachCanvasToWebcam() {
+        if (canvas && webcamContainer && canvas.parentElement !== webcamContainer) {
+            webcamContainer.appendChild(canvas);
+        }
+        canvas.style.position = 'absolute';
+        canvas.style.top = video.offsetTop + 'px';
+        canvas.style.left = video.offsetLeft + 'px';
+        canvas.style.zIndex = '10';
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.borderRadius = '0.375rem';
+        canvas.style.display = 'block';
+    }
 
     const requiredElements = {
         video, canvas, webcamContainer, uploadContainer, 
@@ -52,6 +79,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
     }
+
+    window.addEventListener('resize', function() {
+        if (modeUploadBtn.classList.contains('active') && uploadPreview.style.display === 'block') {
+            canvas.style.width = uploadPreview.offsetWidth + 'px';
+            canvas.style.height = uploadPreview.offsetHeight + 'px';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+        }
+        if (modeWebcamBtn.classList.contains('active') && webcamContainer.style.display !== 'none') {
+            setTimeout(() => {
+                canvas.style.top = video.offsetTop + 'px';
+                canvas.style.left = video.offsetLeft + 'px';
+            }, 100);
+        }
+    });
     
     function switchToUploadMode() {
         modeUploadBtn.classList.add('active', 'btn-camagru');
@@ -61,19 +103,78 @@ document.addEventListener('DOMContentLoaded', function() {
         
         webcamContainer.style.display = 'none';
         uploadContainer.style.display = 'block';
-        stickersSection.classList.add('d-none');
         captureBtn.classList.add('d-none');
         
-        if (uploadInput.files && uploadInput.files.length > 0) {
-            postUploadBtn.classList.remove('d-none');
-        } else {
-            postUploadBtn.classList.add('d-none');
-        }
+        const canvas = document.getElementById('canvas');
+        canvas.style.display = 'none';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '';
+        canvas.style.left = '';
+        canvas.style.border = 'none';
         
         if (animationId) {
             cancelAnimationFrame(animationId);
             animationId = null;
         }
+        
+        stickers = [];
+        selectedStickerIndex = null;
+
+        if (uploadPreviewContainer && canvas.parentElement !== uploadPreviewContainer) {
+            uploadPreviewContainer.appendChild(canvas);
+        }
+        
+        if (uploadInput.files && uploadInput.files.length > 0) {
+            postUploadBtn.classList.remove('d-none');
+            stickersSection.classList.remove('d-none');
+            setupUploadCanvas();
+        } else {
+            postUploadBtn.classList.add('d-none');
+            stickersSection.classList.add('d-none');
+        }
+    }
+
+    function setupUploadCanvas() {
+        const uploadPreview = document.getElementById('upload-preview');
+        const canvas = document.getElementById('canvas');
+        const uploadContainer = document.getElementById('upload-container');
+        
+        uploadPreview.onload = function() {
+            setTimeout(() => {
+                canvas.width = uploadPreview.naturalWidth;
+                canvas.height = uploadPreview.naturalHeight;
+                
+                attachCanvasToUpload();
+                
+                canvas.style.display = 'block';
+                canvas.style.pointerEvents = 'auto';
+                
+                const ctx = canvas.getContext('2d');
+                canvas.ctx = ctx;
+                
+                stickers = [];
+                selectedStickerIndex = null;
+                
+                stickersSection.classList.remove('d-none');
+                
+                startUploadOverlay();
+            }, 100);
+        };
+    }
+
+    function attachCanvasToUpload() {
+        if (canvas && uploadPreviewContainer && canvas.parentElement !== uploadPreviewContainer) {
+            uploadPreviewContainer.appendChild(canvas);
+        }
+        canvas.style.position = 'absolute';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.zIndex = '10';
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.borderRadius = '0.375rem';
+        canvas.style.display = 'block';
     }
     
     function switchToWebcamMode() {
@@ -88,10 +189,29 @@ document.addEventListener('DOMContentLoaded', function() {
         captureBtn.classList.remove('d-none');
         postUploadBtn.classList.add('d-none');
         
+        if (animationId) {
+            cancelAnimationFrame(animationId);
+            animationId = null;
+        }
+        
+        const canvas = document.getElementById('canvas');
+        canvas.style.display = 'none';
+        canvas.style.position = 'absolute';
+        canvas.style.top = '';
+        canvas.style.left = '';
+        canvas.style.border = 'none';
+        
+        stickers = [];
+        selectedStickerIndex = null;
+        
+        if (webcamContainer && canvas.parentElement !== webcamContainer) {
+            webcamContainer.appendChild(canvas);
+        }
+
         if (!webcamInitialized) {
             initializeWebcam();
         } else {
-            startVideoOverlay();
+            setTimeout(() => startVideoOverlay(), 200);
         }
     }
 
@@ -121,6 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 uploadPreview.style.display = 'block';
                 uploadPreview.classList.add('mx-auto');
                 postUploadBtn.classList.remove('d-none');
+                
+                const canvas = document.getElementById('canvas');
+                canvas.style.display = 'none';
+                
+                setupUploadCanvas();
             };
             reader.onerror = () => {
                 alert('Error reading file. Please try again.');
@@ -129,12 +254,61 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             uploadPreview.style.display = 'none';
             postUploadBtn.classList.add('d-none');
+            stickersSection.classList.add('d-none');
+            const canvas = document.getElementById('canvas');
+            canvas.style.display = 'none';
             if (file) {
                 alert('Please select a valid image file (jpg, png, gif, etc.)');
                 this.value = '';
             }
         }
     });
+
+    function startUploadOverlay() {
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.ctx;
+        
+        
+        if (!ctx) return;
+        
+        function drawUploadOverlay() {
+            if (modeUploadBtn.classList.contains('active') && uploadPreview.style.display === 'block') {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                stickers.forEach((sticker, i) => {
+                    if (sticker.img && sticker.img.complete) {
+                        ctx.globalAlpha = 1;
+                        ctx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
+                        
+                        if (i === selectedStickerIndex) {
+                            ctx.strokeStyle = '#007bff';
+                            ctx.lineWidth = 2;
+                            ctx.strokeRect(sticker.x, sticker.y, sticker.width, sticker.height);
+                            
+                            const deleteX = sticker.x + sticker.width - 10;
+                            const deleteY = sticker.y - 10;
+                            ctx.fillStyle = '#ff0000';
+                            ctx.fillRect(deleteX, deleteY, 20, 20);
+                            ctx.fillStyle = '#ffffff';
+                            ctx.font = '14px Arial';
+                            ctx.fillText('×', deleteX + 6, deleteY + 14);
+                            
+                            const resizeX = sticker.x + sticker.width - 10;
+                            const resizeY = sticker.y + sticker.height - 10;
+                            ctx.fillStyle = '#007bff';
+                            ctx.fillRect(resizeX, resizeY, 20, 20);
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillText('⟲', resizeX + 4, resizeY + 14);
+                        }
+                    }
+                });
+                
+                animationId = requestAnimationFrame(drawUploadOverlay);
+            }
+        }
+        
+        drawUploadOverlay();
+    }
 
     postUploadBtn.addEventListener('click', function(e) {
         e.preventDefault();
@@ -145,49 +319,122 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const formData = new FormData();
-        formData.append('image_file', file);
-        formData.append('make_public', '1'); 
-
         this.disabled = true;
         this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
 
-        fetch('save_image.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
+        if (stickers.length > 0) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            
+            const img = new Image();
+            img.onload = () => {
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                
+                tempCtx.drawImage(img, 0, 0);
+                
+                stickers.forEach(sticker => {
+                    if (sticker.img && sticker.img.complete) {
+                        tempCtx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
+                    }
+                });
+                
+                const compositeDataURL = tempCanvas.toDataURL('image/png');
+                sendCompositeImage(compositeDataURL);
+            };
+            img.src = uploadPreview.src;
+        } else {
+            sendOriginalFile(file);
+        }
+
+        function sendCompositeImage(dataURL) {
+            fetch('save_image.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    image: dataURL,
+                    make_public: '1'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                handleUploadResponse(data);
+            })
+            .catch(error => {
+                alert('An error occurred during the upload.');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '📤 Post Photo';
+            });
+        }
+        
+        function sendOriginalFile(file) {
+            const formData = new FormData();
+            formData.append('image_file', file);
+            formData.append('make_public', '1');
+
+            fetch('save_image.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                handleUploadResponse(data);
+            })
+            .catch(error => {
+                alert('An error occurred during the upload.');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '📤 Post Photo';
+            });
+        }
+        
+        function handleUploadResponse(data) {
             if (data.success && data.photo) {
                 alert('Photo uploaded and saved successfully!');
                 addPhotoToGallery(data.photo);
                 uploadInput.value = '';
                 uploadPreview.style.display = 'none';
-                this.classList.add('d-none');
+                postUploadBtn.classList.add('d-none');
+                stickers = [];
+                selectedStickerIndex = null;
+                const canvas = document.getElementById('canvas');
+                canvas.style.display = 'none';
             } else {
                 alert('Error saving photo: ' + (data.error || 'Unknown error'));
             }
-        })
-        .catch(error => {
-            alert('An error occurred during the upload.');
-        })
-        .finally(() => {
-            this.disabled = false;
-            this.innerHTML = '📤 Post Photo';
-        });
+        }
     });
 
     document.querySelectorAll('.sticker-thumb').forEach(img => {
         img.addEventListener('click', function() {
             if (isCapturing) return;
+            const isWebcamMode = modeWebcamBtn.classList.contains('active');
+            const isUploadMode = modeUploadBtn.classList.contains('active') && uploadPreview.style.display === 'block';
+            
+            
+            if (!isWebcamMode && !isUploadMode) {
+                alert('Please select webcam mode or upload an image first.');
+                return;
+            }
+            
+            const canvas = document.getElementById('canvas');
+            const stickerSize = Math.min(canvas.width * 0.15, canvas.height * 0.15);
+            
             const sticker = {
                 src: this.src, 
-                x: 50, 
-                y: 50, 
-                width: 100, 
-                height: 80,
+                x: canvas.width * 0.1,
+                y: canvas.height * 0.1,
+                width: stickerSize, 
+                height: stickerSize,
                 img: new Image()
             };
+            
             sticker.img.src = sticker.src;
             sticker.img.onload = () => {
                 stickers.push(sticker);
@@ -232,6 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
 
     if (cancelSelectionBtn) {
         cancelSelectionBtn.addEventListener('click', function() {
@@ -334,76 +582,79 @@ document.addEventListener('DOMContentLoaded', function() {
 });
     
     function initializeWebcam() {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert('Your browser does not support webcam access. Please use the upload mode.');
-        switchToUploadMode();
-        return;
-    }
-    
-    navigator.mediaDevices.getUserMedia({ 
-        video: { 
-            width: { ideal: 640 },
-            height: { ideal: 480 }
-        } 
-    })
-    .then(stream => { 
-        video.srcObject = stream;
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
         
-        video.onloadedmetadata = () => {
-            // Ajustar o tamanho do vídeo para usar todo o espaço disponível
-            const container = document.getElementById('webcam-container');
-            const containerWidth = container.clientWidth - 40; // Margem
-            const aspectRatio = video.videoWidth / video.videoHeight;
-            
-            let newWidth = containerWidth;
-            let newHeight = containerWidth / aspectRatio;
-            
-            // Se a altura for muito grande, ajustar pela altura
-            const maxHeight = 400;
-            if (newHeight > maxHeight) {
-                newHeight = maxHeight;
-                newWidth = maxHeight * aspectRatio;
-            }
-            
-            video.width = newWidth;
-            video.height = newHeight;
-            video.style.width = newWidth + 'px';
-            video.style.height = newHeight + 'px';
-            
-            // Ajustar canvas também
-            const canvas = document.getElementById('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.style.width = newWidth + 'px';
-            canvas.style.height = newHeight + 'px';
-            
-            video.play().catch(err => console.error('Error playing video:', err));
-            
-            if (!canvas.getContext) return;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-            canvas.ctx = ctx;
-            
-            setTimeout(() => startVideoOverlay(), 200);
-        };
-        
-        video.onerror = (err) => alert('Error loading video stream');
-        
-        webcamInitialized = true;
-    })
-    .catch(err => { 
-        let errorMessage = 'Could not access webcam: ';
-        switch(err.name) {
-            case 'NotAllowedError': errorMessage += 'Permission denied.'; break;
-            case 'NotFoundError': errorMessage += 'No camera found.'; break;
-            case 'NotReadableError': errorMessage += 'Camera is in use.'; break;
-            case 'OverconstrainedError': errorMessage += 'Camera does not support constraints.'; break;
-            default: errorMessage += err.message;
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Your browser does not support webcam access. Please use the upload mode.');
+            switchToUploadMode();
+            return;
         }
-        alert(errorMessage);
-        switchToUploadMode();
-    });
-}
+        
+        navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            } 
+        })
+        .then(stream => { 
+            video.srcObject = stream;
+            
+            video.onloadedmetadata = () => {
+                const container = document.getElementById('webcam-container');
+                const containerWidth = container.clientWidth - 40;
+                const aspectRatio = video.videoWidth / video.videoHeight;
+                
+                let newWidth = containerWidth;
+                let newHeight = containerWidth / aspectRatio;
+                
+                const maxHeight = 400;
+                if (newHeight > maxHeight) {
+                    newHeight = maxHeight;
+                    newWidth = maxHeight * aspectRatio;
+                }
+                
+                video.width = newWidth;
+                video.height = newHeight;
+                video.style.width = newWidth + 'px';
+                video.style.height = newHeight + 'px';
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.style.width = newWidth + 'px';
+                canvas.style.height = newHeight + 'px';
+                
+                video.play().catch(err => console.error('Error playing video:', err));
+                
+                if (!canvas.getContext) return;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return;
+                canvas.ctx = ctx;
+                
+                setTimeout(() => startVideoOverlay(), 200);
+            };
+            
+            video.onerror = (err) => {
+                console.error('Video error:', err);
+                alert('Error loading video stream');
+            };
+            
+            webcamInitialized = true;
+        })
+        .catch(err => { 
+            console.error('getUserMedia error:', err);
+            let errorMessage = 'Could not access webcam: ';
+            switch(err.name) {
+                case 'NotAllowedError': errorMessage += 'Permission denied.'; break;
+                case 'NotFoundError': errorMessage += 'No camera found.'; break;
+                case 'NotReadableError': errorMessage += 'Camera is in use.'; break;
+                case 'OverconstrainedError': errorMessage += 'Camera does not support constraints.'; break;
+                default: errorMessage += err.message;
+            }
+            alert(errorMessage);
+            switchToUploadMode();
+        });
+    }
 
 function startVideoOverlay() {
     const video = document.getElementById('webcam');
@@ -418,7 +669,6 @@ function startVideoOverlay() {
         return;
     }
     
-    // Posicionar canvas sobre o vídeo
     canvas.style.position = 'absolute';
     canvas.style.top = video.offsetTop + 'px';
     canvas.style.left = video.offsetLeft + 'px';
@@ -595,37 +845,52 @@ function handleCapturePhoto() {
     const video = document.getElementById('webcam');
     const canvas = document.getElementById('canvas');
     const webcamContainer = document.getElementById('webcam-container');
+    
     if (webcamContainer.style.display === 'none') {
         alert('Please switch to webcam mode to capture photos.');
         return;
     }
+    
     if (!webcamInitialized || !video.srcObject) {
         alert('Webcam is not ready. Please try again.');
         return;
     }
+    
     isCapturing = true;
-    if (animationId) cancelAnimationFrame(animationId);
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+    
     video.style.display = 'none';
     canvas.style.display = 'none';
+    
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvas.width;
     tempCanvas.height = canvas.height;
     const tempCtx = tempCanvas.getContext('2d');
+    
     tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+    
     stickers.forEach(sticker => {
-        tempCtx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
+        if (sticker.img && sticker.img.complete) {
+            tempCtx.drawImage(sticker.img, sticker.x, sticker.y, sticker.width, sticker.height);
+        }
     });
+    
     const photoResult = document.getElementById('photo-result');
     photoResult.src = tempCanvas.toDataURL('image/png');
     document.getElementById('captured-photo').style.display = 'block';
+    
     canvas.width = tempCanvas.width;
     canvas.height = tempCanvas.height;
     const mainCtx = canvas.getContext('2d');
     mainCtx.drawImage(tempCanvas, 0, 0);
+    
     document.getElementById('save-btn').style.display = 'inline-block';
     const captureBtn = document.getElementById('capture-btn');
     captureBtn.textContent = 'Nova Foto';
     captureBtn.onclick = resetCapture;
+    
 }
 
 function selectPhoto(photoId, imgElement) {
@@ -633,6 +898,7 @@ function selectPhoto(photoId, imgElement) {
     imgElement.classList.add('selected');
     selectedPhotoId = photoId;
     const selectedPreview = document.getElementById('selected-photo-preview');
+    const uploadPreviewContainer = document.querySelector('.upload-preview-container');
     const selectedPreviewImg = document.getElementById('selected-preview-img');
     if (selectedPreviewImg && selectedPreview) {
         selectedPreviewImg.src = imgElement.src;
