@@ -8,6 +8,14 @@
     if (isset($_GET['logout']) && $_GET['logout'] == 'success') {
         $message = 'Logout realizado com sucesso!';
     }
+
+    if (isset($_SESSION['flash_message'])) {
+        $message = $_SESSION['flash_message'];
+        $messageType = $_SESSION['flash_type'] ?? 'info';
+        unset($_SESSION['flash_message']);
+        unset($_SESSION['flash_type']);
+    }
+    
     $page_title = 'Camagru';
     $page_name = 'Camagru';
 

@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verify_csrf_token($csrf_token)) {
         $message = "Invalid CSRF token. Please try again.";
         $messageType = 'error';
-    } elseif (!check_rate_limit('preferences_update', 5, 300)) {
+    } elseif (!check_rate_limit('preferences_update', 2, 300)) {
         $message = "Too many update attempts. Please try again in 5 minutes.";
         $messageType = 'error';
     } else {
@@ -54,19 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         mysqli_stmt_close($stmt);
     }
-}
-
-function mask_email($email) {
-    $parts = explode('@', $email);
-    if (count($parts) != 2) return $email;
-    
-    $username = $parts[0];
-    $domain = $parts[1];
-    
-    $masked_username = substr($username, 0, 2) . str_repeat('*', max(2, strlen($username) - 2));
-    $masked_domain = substr($domain, 0, 2) . str_repeat('*', max(2, strlen($domain) - 2));
-    
-    return $masked_username . '@' . $masked_domain;
 }
 
 include 'includes/header.php';

@@ -51,17 +51,14 @@
     function validate_comment_text($comment) {
         $comment = trim($comment);
         
-        // Verificar tamanho
         if (empty($comment) || strlen($comment) > 500) {
             return false;
         }
         
-        // Verificar caracteres perigosos
         if (preg_match('/<script|javascript:|data:|vbscript:|on\w+\s*=/i', $comment)) {
             return false;
         }
         
-        // Verificar SQL injection patterns
         if (preg_match('/(\bUNION\b|\bSELECT\b|\bINSERT\b|\bDELETE\b|\bUPDATE\b|\bDROP\b)/i', $comment)) {
             return false;
         }
@@ -80,7 +77,6 @@
     }
 
     function generate_csrf_token() {
-        // Gerar token único por formulário
         $token = bin2hex(random_bytes(32));
         $_SESSION['csrf_tokens'][$token] = time();
         
@@ -106,7 +102,6 @@
             return false;
         }
         
-        // Consider if this token cleanup is affecting other session data
         return true;
     }
 
@@ -122,17 +117,28 @@
         if (!mysqli_stmt_execute($stmt)) {
             error_log("Execute failed: " . mysqli_stmt_error($stmt));
             mysqli_stmt_close($stmt);
-            return null; // Query error
+            return null;
         }
 
         mysqli_stmt_store_result($stmt);
         $exists = mysqli_stmt_num_rows($stmt) > 0;
 
         mysqli_stmt_close($stmt);
-        return $exists; // true if exists, false if not
+        return $exists;
     }
 
     function check_rate_limit($action, $max_attempts, $time_window) {
+        $limits = [
+            'comment' => ['attempts' => 3, 'window' => 300], // 3 comentários por 5min
+            'like' => ['attempts' => 10, 'window' => 60],     // 10 likes por 1min
+            'upload' => ['attempts' => 5, 'window' => 300],   // 5 uploads por 5min
+            'save_image' => ['attempts' => 3, 'window' => 180] // 3 saves por 3min
+        ];
+        
+        if (isset($limits[$action])) {
+            $max_attempts = $limits[$action]['attempts'];
+            $time_window = $limits[$action]['window'];
+        }
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $key = $action . '_attempts_' . $ip;
         $time_key = $action . '_time_' . $ip;
@@ -225,4 +231,28 @@
             }
         }
     }
+
+    function mask_email($email) {
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return '[Invalid Email]';
+        }
+        
+        $parts = explode('@', $email);
+        if (count($parts) != 2) return $email;
+        
+        $username = $parts[0];
+        $domain = $parts[1];
+        
+        // Mostrar primeiros 2 caracteres do username e primeiro caracter do domínio
+        $masked_username = substr($username, 0, min(2, strlen($username))) . str_repeat('*', max(1, strlen($username) - 2));
+        $domain_parts = explode('.', $domain);
+        $masked_domain = substr($domain_parts[0], 0, 1) . str_repeat('*', max(1, strlen($domain_parts[0]) - 1));
+        
+        if (count($domain_parts) > 1) {
+            $masked_domain .= '.' . end($domain_parts); // Mostrar a extensão (.com, .br, etc)
+        }
+        
+        return $masked_username . '@' . $masked_domain;
+}
+    
 ?>

@@ -6,10 +6,25 @@ $messageType = '';
 
 if (isset($_GET['token'])) {
     $token = $_GET['token'];
+
+    error_log("Token received: " . $token);
     
-    $stmt = mysqli_prepare($conn, "UPDATE users SET email_verified = 1, confirmation_token = NULL WHERE confirmation_token = ? AND email_verified = 0");
+    $check_stmt = mysqli_prepare($conn, "SELECT email_verified FROM users WHERE confirmation_token = ? LIMIT 1");
+    mysqli_stmt_bind_param($check_stmt, "s", $token);
+    mysqli_stmt_execute($check_stmt);
+    mysqli_stmt_bind_result($check_stmt, $email_verified);
+    $token_exists = mysqli_stmt_fetch($check_stmt);
+    mysqli_stmt_close($check_stmt);
     
-    if ($stmt) {
+    if (!$token_exists) {
+        $message = "Invalid confirmation token. Please check the link or request a new confirmation email.";
+        $messageType = 'error';
+    } elseif ($email_verified) {
+        $message = "Email already verified. You can now log in.";
+        $messageType = 'success';
+    } else {
+        // Token exists and email is not verified, proceed with update
+        $stmt = mysqli_prepare($conn, "UPDATE users SET email_verified = 1, confirmation_token = NULL WHERE confirmation_token = ? AND email_verified = 0");
         mysqli_stmt_bind_param($stmt, "s", $token);
         
         if (mysqli_stmt_execute($stmt)) {
@@ -17,7 +32,7 @@ if (isset($_GET['token'])) {
                 $message = "Email confirmed successfully. You can now log in.";
                 $messageType = 'success';
             } else {
-                $message = "Invalid confirmation token or email already verified.";
+                $message = "Confirmation failed. Please try again or contact support.";
                 $messageType = 'error';
             }
         } else {

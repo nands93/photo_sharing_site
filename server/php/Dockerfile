@@ -43,11 +43,16 @@ RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/security.ini && \
 
 RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/security.conf && \
+    echo "pm = dynamic" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_children = 20" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.start_servers = 2" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.min_spare_servers = 1" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_spare_servers = 3" >> /usr/local/etc/php-fpm.d/security.conf && \
-    echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf
+    echo "pm.max_requests = 500" >> /usr/local/etc/php-fpm.d/security.conf && \
+    echo "pm.process_idle_timeout = 30s" >> /usr/local/etc/php-fpm.d/security.conf && \
+    echo "request_terminate_timeout = 30s" >> /usr/local/etc/php-fpm.d/security.conf
+
+RUN cat /usr/local/etc/php-fpm.d/security.conf
 
 COPY client/composer.json client/composer.lock* ./
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
