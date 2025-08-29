@@ -49,14 +49,13 @@ RUN echo "[www]" > /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_spare_servers = 3" >> /usr/local/etc/php-fpm.d/security.conf && \
     echo "pm.max_requests = 1000" >> /usr/local/etc/php-fpm.d/security.conf
 
+COPY client/composer.json client/composer.lock* ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
+
 COPY client/ .
-COPY .env .env
 
 RUN chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client
-
-USER www
-RUN if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
 
 USER root
 
@@ -66,11 +65,8 @@ RUN mkdir -p /var/www/client/uploads /var/log && \
     chmod -R 775 /var/www/client/uploads && \
     chown www:www /var/log/php_errors.log 2>/dev/null || touch /var/log/php_errors.log && chown www:www /var/log/php_errors.log
 
-RUN rm -f /var/www/client/.git* 2>/dev/null || true
-
 RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
     find /var/www/client -type d -exec chmod 755 {} \;
-    # chmod 600 /var/www/client/.env
 
 RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
     echo 'cgi-fcgi -bind -connect 127.0.0.1:9000' >> /usr/local/bin/healthcheck.sh && \
@@ -80,7 +76,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1
 
 EXPOSE 9000
-
-USER www
 
 CMD ["php-fpm", "--nodaemonize", "--fpm-config", "/usr/local/etc/php-fpm.conf"]

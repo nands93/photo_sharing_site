@@ -1,0 +1,8 @@
+.git
+.gitignore
+.vscode/
+vendor/
+node_modules/
+*.md
+Makefile
+docker-compose.yml
