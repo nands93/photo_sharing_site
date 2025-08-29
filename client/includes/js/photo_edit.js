@@ -319,8 +319,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+        const button = this;
+        button.disabled = true;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
 
         if (stickers.length > 0) {
             const canvas = document.getElementById('canvas');
@@ -343,73 +344,80 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 const compositeDataURL = tempCanvas.toDataURL('image/png');
-                sendCompositeImage(compositeDataURL);
+                sendCompositeImage(compositeDataURL, button);
             };
             img.src = uploadPreview.src;
         } else {
-            sendOriginalFile(file);
-        }
-
-        function sendCompositeImage(dataURL) {
-            fetch('save_image.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    image: dataURL,
-                    make_public: '1'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                handleUploadResponse(data);
-            })
-            .catch(error => {
-                alert('An error occurred during the upload.');
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = '📤 Post Photo';
-            });
-        }
-        
-        function sendOriginalFile(file) {
-            const formData = new FormData();
-            formData.append('image_file', file);
-            formData.append('make_public', '1');
-
-            fetch('save_image.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                handleUploadResponse(data);
-            })
-            .catch(error => {
-                alert('An error occurred during the upload.');
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = '📤 Post Photo';
-            });
-        }
-        
-        function handleUploadResponse(data) {
-            if (data.success && data.photo) {
-                alert('Photo uploaded and saved successfully!');
-                addPhotoToGallery(data.photo);
-                uploadInput.value = '';
-                uploadPreview.style.display = 'none';
-                postUploadBtn.classList.add('d-none');
-                stickers = [];
-                selectedStickerIndex = null;
-                const canvas = document.getElementById('canvas');
-                canvas.style.display = 'none';
-            } else {
-                alert('Error saving photo: ' + (data.error || 'Unknown error'));
-            }
+            sendOriginalFile(file, button);
         }
     });
+
+    function sendCompositeImage(dataURL, button) {
+        fetch('save_image.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                image: dataURL,
+                make_public: '1'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            handleUploadResponse(data, button);
+        })
+        .catch(error => {
+            alert('An error occurred during the upload.');
+            resetButton(button);
+        });
+    }
+    
+    function sendOriginalFile(file, button) {
+        const formData = new FormData();
+        formData.append('image_file', file);
+        formData.append('make_public', '1');
+
+        fetch('save_image.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            handleUploadResponse(data, button);
+        })
+        .catch(error => {
+            alert('An error occurred during the upload.');
+            resetButton(button);
+        });
+    }
+    
+    function handleUploadResponse(data, button) {
+        if (data.success && data.photo) {
+            alert('Photo uploaded and saved successfully!');
+            addPhotoToGallery(data.photo);
+            uploadInput.value = '';
+            uploadPreview.style.display = 'none';
+            postUploadBtn.classList.add('d-none');
+            stickersSection.classList.add('d-none');
+            stickers = [];
+            selectedStickerIndex = null;
+            const canvas = document.getElementById('canvas');
+            canvas.style.display = 'none';
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        } else {
+            alert('Error saving photo: ' + (data.error || 'Unknown error'));
+        }
+        
+        resetButton(button);
+    }
+    
+    function resetButton(button) {
+        button.disabled = false;
+        button.innerHTML = '📤 Post Photo';
+    }
 
     document.querySelectorAll('.sticker-thumb').forEach(img => {
         img.addEventListener('click', function() {
