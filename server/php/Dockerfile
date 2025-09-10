@@ -46,6 +46,9 @@ RUN echo "expose_php = Off" >> /usr/local/etc/php/conf.d/performance.ini && \
     echo "opcache.revalidate_freq = 0" >> /usr/local/etc/php/conf.d/performance.ini
 
 RUN echo "[www]" > /usr/local/etc/php-fpm.d/performance.conf && \
+    echo "user = www" >> /usr/local/etc/php-fpm.d/performance.conf && \
+    echo "group = www" >> /usr/local/etc/php-fpm.d/performance.conf && \
+    echo "listen = 0.0.0.0:9000" >> /usr/local/etc/php-fpm.d/performance.conf && \
     echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/performance.conf && \
     echo "pm = dynamic" >> /usr/local/etc/php-fpm.d/performance.conf && \
     echo "pm.max_children = 50" >> /usr/local/etc/php-fpm.d/performance.conf && \
@@ -63,24 +66,22 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 
 COPY client/ .
 
-RUN chown -R www:www /var/www/client && \
-    chmod -R 755 /var/www/client
-
-USER root
-
 RUN mkdir -p /var/www/client/uploads /var/log && \
     chown -R www:www /var/www/client && \
     chmod -R 755 /var/www/client && \
     chmod -R 775 /var/www/client/uploads && \
-    chown www:www /var/log/php_errors.log 2>/dev/null || touch /var/log/php_errors.log && chown www:www /var/log/php_errors.log && \
-    chown www:www /var/log/php_slow.log 2>/dev/null || touch /var/log/php_slow.log && chown www:www /var/log/php_slow.log
+    touch /var/log/php_errors.log /var/log/php_slow.log && \
+    chown www:www /var/log/php_errors.log /var/log/php_slow.log
 
 RUN find /var/www/client -type f -name "*.php" -exec chmod 644 {} \; && \
-    find /var/www/client -type d -exec chmod 755 {} \;
+    find /var/www/client -type d -exec chmod 755 {} \; && \
+    chmod -R 775 /var/www/client/uploads
 
 RUN echo '#!/bin/sh' > /usr/local/bin/healthcheck.sh && \
     echo 'cgi-fcgi -bind -connect 127.0.0.1:9000' >> /usr/local/bin/healthcheck.sh && \
     chmod +x /usr/local/bin/healthcheck.sh
+
+USER www
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD /usr/local/bin/healthcheck.sh || exit 1

@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const button = this;
         button.disabled = true;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
 
         if (stickers.length > 0) {
             const canvas = document.getElementById('canvas');
@@ -513,7 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             this.disabled = true;
-            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
             fetch('post_photo.php', {
                 method: 'POST',

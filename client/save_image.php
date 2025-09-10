@@ -1,4 +1,14 @@
 <?php
+$upload_dir = __DIR__ . "/uploads";
+if (!is_dir($upload_dir)) {
+    if (!mkdir($upload_dir, 0755, true)) {
+        error_log("Failed to create upload directory: " . $upload_dir);
+        error_log("Current user: " . get_current_user());
+        error_log("Directory permissions: " . (is_writable(__DIR__) ? 'writable' : 'not writable'));
+        echo json_encode(['success' => false, 'error' => 'Upload directory not found and could not be created.']);
+        exit();
+    }
+}
 session_start();
 require_once 'backend.php';
 
@@ -94,14 +104,6 @@ try {
     $timestamp = time();
     $random_hash = bin2hex(random_bytes(16));
     $filename = "{$safe_username}_{$user_id}_{$timestamp}_{$random_hash}.png"; // Always save as PNG for consistency
-    
-    $upload_dir = realpath(__DIR__ . "/uploads/");
-    if (!$upload_dir) {
-        if (!mkdir(__DIR__ . "/uploads/", 0755, true)) {
-             throw new Exception('Upload directory not found and could not be created.');
-        }
-        $upload_dir = realpath(__DIR__ . "/uploads/");
-    }
     
     $file_path = $upload_dir . DIRECTORY_SEPARATOR . $filename;
     
